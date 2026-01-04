@@ -21,23 +21,28 @@ class AsteroidGame {
   #height;
   #playerOne;
   #playerTwo;
+  #P1Projectiles = [];
+  #P2Projectiles = [];
   #keys = {
     w: false,
     s: false,
     d: false,
     a: false,
+    t: false,
     ArrowUp: false,
     ArrowDown: false,
     ArrowLeft: false,
     ArrowRight: false,
+    m: false,
   };
 
   constructor(ctx, width, height) {
+    this.#P1Projectiles = [];
+    this.#P2Projectiles = [];
     this.#ctx = ctx;
     this.#width = width;
     this.#height = height;
 
-    console.log({ width, height });
     this.#playerOne = new Ship(45, 64);
     this.#playerTwo = new Ship(
       45,
@@ -47,6 +52,7 @@ class AsteroidGame {
         down: "ArrowDown",
         left: "ArrowLeft",
         right: "ArrowRight",
+        shoot: "m",
       },
       { x: width - 45, y: height - 64 }
     );
@@ -84,6 +90,13 @@ class AsteroidGame {
 
   loop() {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
+
+    this.#addShotProjectiles();
+
+    this.#destroyInactiveProjectiles();
+
+    this.#moveProjectiles();
+
     this.#playerOne.update(this.#ctx, this.#keys, this.#width, this.#height);
     this.#playerTwo.update(this.#ctx, this.#keys, this.#width, this.#height);
 
@@ -92,5 +105,36 @@ class AsteroidGame {
       this.#playerTwo.bounce();
     }
     requestAnimationFrame(() => this.loop());
+  }
+
+  #addShotProjectiles() {
+    const newProjectileOne = this.#playerOne.shoot(this.#keys);
+    const newProjectileTwo = this.#playerTwo.shoot(this.#keys);
+
+    if (newProjectileOne) {
+      this.#P1Projectiles.push(newProjectileOne);
+    }
+
+    if (newProjectileTwo) {
+      this.#P2Projectiles.push(newProjectileTwo);
+    }
+  }
+
+  #moveProjectiles() {
+    if (this.#P1Projectiles.length > 0) {
+      this.#P1Projectiles.forEach((p) =>
+        p.update(this.#ctx, this.#width, this.#height)
+      );
+    }
+    if (this.#P2Projectiles.length > 0) {
+      this.#P2Projectiles.forEach((p) =>
+        p.update(this.#ctx, this.#width, this.#height)
+      );
+    }
+  }
+
+  #destroyInactiveProjectiles() {
+    this.#P1Projectiles = this.#P1Projectiles.filter((p) => p.active);
+    this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
   }
 }

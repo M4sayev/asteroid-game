@@ -1,3 +1,6 @@
+import { DIAGONAL_MODIFIER } from "./constants.js";
+import { Projectile } from "./Projectile.js";
+
 export class Ship {
   #height;
   #width;
@@ -9,19 +12,20 @@ export class Ship {
   #y;
 
   #angle = 0;
-  #friction = 0.99;
-  #rotationSpeed = 0.02;
-  #maxV = 10;
   #vx = 0;
   #vy = 0;
-  #a = 0.01;
+  #cooldown = 0;
 
-  static #DIAGONAL_MODIFIER = Math.SQRT1_2;
-
+  // constants
+  #shootCooldown = 150;
+  #maxVelocity = 10;
+  #acceleration = 0.01;
+  #rotationSpeed = 0.02;
+  #friction = 0.99;
   constructor(
     width,
     height,
-    controls = { up: "w", down: "s", left: "a", right: "d" },
+    controls = { up: "w", down: "s", left: "a", right: "d", shoot: "t" },
     initialCoordinates = { x: 0, y: 0 }
   ) {
     console.log(controls);
@@ -56,10 +60,22 @@ export class Ship {
     return this.#height;
   }
 
-  update(ctx, keys, width, height) {
+  update(ctx, keys, canvasWidth, canvasHeight) {
     this.rotate(ctx);
     this.move(keys);
-    this.#handleOutOfBounds(width, height);
+    this.#handleCooldown();
+    this.#handleOutOfBounds(canvasWidth, canvasHeight);
+  }
+
+  drawHitBox(ctx) {
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      -this.#width / 2,
+      -this.#height / 2,
+      this.#width,
+      this.#height
+    );
   }
 
   rotate(ctx) {
@@ -69,16 +85,9 @@ export class Ship {
     ctx.translate(this.#x + this.#width / 2, this.#y + this.#height / 2);
 
     ctx.rotate(this.#angle);
-    ctx.drawImage(this.#img, -this.#width / 2, -this.#height / 2);
+    this.draw(ctx);
 
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(
-      -this.#width / 2,
-      -this.#height / 2,
-      this.#width,
-      this.#height
-    );
+    this.drawHitBox(ctx);
 
     ctx.restore();
   }
@@ -99,17 +108,34 @@ export class Ship {
   }
 
   move(keys) {
-    const { left, right, up, down } = this.#controls;
+    this.#readInput(keys);
+    this.#applyAcceleration();
+    this.#applyFriction();
+    this.#applyMovement();
+    this.updateAngle();
+  }
 
+  #readInput(keys) {
+    const { left, right, up, down } = this.#controls;
     this.#horizontal = keys[right] - keys[left];
     this.#vertical = keys[down] - keys[up];
+  }
 
-    this.#vx += this.#horizontal * this.#a;
-    this.#vx = Math.max(-this.#maxV, Math.min(this.#maxV, this.#vx));
+  #applyAcceleration() {
+    this.#vx += this.#horizontal * this.#acceleration;
+    this.#vx = Math.max(
+      -this.#maxVelocity,
+      Math.min(this.#maxVelocity, this.#vx)
+    );
 
-    this.#vy += this.#vertical * this.#a;
-    this.#vy = Math.max(-this.#maxV, Math.min(this.#maxV, this.#vy));
+    this.#vy += this.#vertical * this.#acceleration;
+    this.#vy = Math.max(
+      -this.#maxVelocity,
+      Math.min(this.#maxVelocity, this.#vy)
+    );
+  }
 
+  #applyFriction() {
     if (!this.#horizontal) {
       this.#vx *= this.#friction;
     }
@@ -117,13 +143,19 @@ export class Ship {
     if (!this.#vertical) {
       this.#vy *= this.#friction;
     }
+  }
 
-    const currentCoeff = this.#vx && this.#vy ? Ship.#DIAGONAL_MODIFIER : 1;
+  #applyMovement() {
+    const currentCoeff = this.#vx && this.#vy ? DIAGONAL_MODIFIER : 1;
 
     this.#x += this.#vx * currentCoeff;
     this.#y += this.#vy * currentCoeff;
+  }
 
-    this.updateAngle();
+  #handleCooldown() {
+    if (this.#cooldown > 0) {
+      this.#cooldown--;
+    }
   }
 
   #handleOutOfBounds(width, height) {
@@ -140,8 +172,21 @@ export class Ship {
   }
 
   draw(ctx) {
-    if (!this.#img) return;
+    ctx.drawImage(this.#img, -this.#width / 2, -this.#height / 2);
+  }
 
-    ctx.drawImage(this.#img, this.#x, this.#y);
+  shoot(keys) {
+    const { shoot: shootKey } = this.#controls;
+    if (keys[shootKey] && this.#cooldown === 0) {
+      this.#cooldown = this.#shootCooldown;
+      return new Projectile(
+        this.#x + this.#width / 2,
+        this.#y + this.#height / 2,
+        -Math.sin(this.#angle) * 10,
+        Math.cos(this.#angle) * 10,
+        this.#angle
+      );
+    }
+    return null;
   }
 }
