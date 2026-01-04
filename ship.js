@@ -4,6 +4,7 @@ export class Ship {
   #img;
   #horizontal;
   #vertical;
+  #controls;
 
   #x = 0;
   #y = 0;
@@ -17,9 +18,15 @@ export class Ship {
 
   static #DIAGONAL_MODIFIER = Math.SQRT1_2;
 
-  constructor(width, height) {
+  constructor(
+    width,
+    height,
+    controls = { up: "w", down: "s", left: "a", right: "d" }
+  ) {
+    console.log(controls);
     this.#width = width;
     this.#height = height;
+    this.#controls = controls;
 
     const img = new Image(this.#width, this.#height);
 
@@ -68,8 +75,10 @@ export class Ship {
   }
 
   move(keys) {
-    this.#horizontal = keys.d - keys.a;
-    this.#vertical = keys.s - keys.w;
+    const { left, right, up, down } = this.#controls;
+
+    this.#horizontal = keys[right] - keys[left];
+    this.#vertical = keys[down] - keys[up];
 
     this.#vx += this.#horizontal * this.#a;
     this.#vx = Math.max(-this.#maxV, Math.min(this.#maxV, this.#vx));
