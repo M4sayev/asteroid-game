@@ -5,9 +5,9 @@ export class Ship {
   #horizontal;
   #vertical;
   #controls;
+  #x;
+  #y;
 
-  #x = 0;
-  #y = 0;
   #angle = 0;
   #friction = 0.99;
   #rotationSpeed = 0.02;
@@ -21,12 +21,15 @@ export class Ship {
   constructor(
     width,
     height,
-    controls = { up: "w", down: "s", left: "a", right: "d" }
+    controls = { up: "w", down: "s", left: "a", right: "d" },
+    initialCoordinates = { x: 0, y: 0 }
   ) {
     console.log(controls);
     this.#width = width;
     this.#height = height;
     this.#controls = controls;
+    this.#x = initialCoordinates.x;
+    this.#y = initialCoordinates.y;
 
     const img = new Image(this.#width, this.#height);
 
@@ -35,6 +38,22 @@ export class Ship {
     };
 
     img.src = "assets/ship_64_45.png";
+  }
+
+  get x() {
+    return this.#x;
+  }
+
+  get y() {
+    return this.#y;
+  }
+
+  get width() {
+    return this.#width;
+  }
+
+  get height() {
+    return this.#height;
   }
 
   update(ctx, keys, width, height) {
@@ -72,6 +91,11 @@ export class Ship {
 
       this.#angle += gap * this.#rotationSpeed;
     }
+  }
+
+  bounce() {
+    this.#vx *= -1;
+    this.#vy *= -1;
   }
 
   move(keys) {
