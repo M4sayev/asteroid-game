@@ -1,22 +1,28 @@
 export class Ship {
   #x = 0;
   #y = 0;
-  #boxSize;
+  #angle = 0;
+  #height;
+  #width;
   #speed;
-  #coeff;
   #img;
-  #angle;
-  constructor(boxSize, speed) {
+  #horizontal;
+  #vertical;
+  #rotationSpeed;
+  static #DIAGONAL_MODIFIER = Math.SQRT1_2;
+  constructor(width, height, speed, rotationSpeed) {
     this.#speed = speed;
-    this.#boxSize = boxSize;
+    this.#width = width;
+    this.#height = height;
+    this.#rotationSpeed = rotationSpeed;
 
-    const img = new Image(this.#boxSize, this.#boxSize);
+    const img = new Image(this.#width, this.#height);
 
     img.onload = () => {
       this.#img = img;
     };
 
-    img.src = "assets/ship.png";
+    img.src = "assets/ship_64_45.png";
   }
 
   update(ctx, keys, width, height) {
@@ -29,46 +35,55 @@ export class Ship {
     if (!this.#img) return;
     ctx.save();
 
-    ctx.translate(this.#x + this.#boxSize / 2, this.#y + this.#boxSize / 2);
+    ctx.translate(this.#x + this.#width / 2, this.#y + this.#height / 2);
 
     ctx.rotate(this.#angle);
-    ctx.drawImage(this.#img, -this.#boxSize, -this.#boxSize);
+    ctx.drawImage(this.#img, -this.#width / 2, -this.#height / 2);
+
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      -this.#width / 2,
+      -this.#height / 2,
+      this.#width,
+      this.#height
+    );
 
     ctx.restore();
   }
 
-  updateAngle(horizontal, vertical) {
-    if (horizontal || vertical) {
-      this.#angle = Math.atan2(
-        horizontal * this.#speed,
-        -vertical * this.#speed
-      );
+  updateAngle() {
+    if (this.#horizontal || this.#vertical) {
+      const targetAngle = Math.atan2(-this.#horizontal, this.#vertical);
+      let rawGap = targetAngle - this.#angle;
+      const gap = ((rawGap + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+      this.#angle += gap * this.#rotationSpeed;
     }
   }
 
   move(keys) {
-    const horizontal = keys.d - keys.a;
-    const vertical = keys.s - keys.w;
+    this.#horizontal = keys.d - keys.a;
+    this.#vertical = keys.s - keys.w;
 
-    if ((keys.d || keys.a) && (keys.s || keys.w))
-      this.#coeff = Math.sqrt(1 / 2);
-    else this.#coeff = 1;
+    const currentCoeff =
+      this.#horizontal && this.#vertical ? Ship.#DIAGONAL_MODIFIER : 1;
 
-    this.#x += horizontal * this.#speed * this.#coeff;
-    this.#y += vertical * this.#speed * this.#coeff;
+    this.#x += this.#horizontal * this.#speed * currentCoeff;
+    this.#y += this.#vertical * this.#speed * currentCoeff;
 
-    this.updateAngle(horizontal, vertical);
+    this.updateAngle();
   }
 
   #handleOutOfBounds(width, height) {
     if (this.#x >= width) {
-      this.#x = -2 * this.#boxSize;
-    } else if (this.#x < -2 * this.#boxSize) {
+      this.#x = -this.#width;
+    } else if (this.#x < -this.#width) {
       this.#x = width;
     }
-    if (this.#y >= height + this.#boxSize) {
-      this.#y = -2 * this.#boxSize;
-    } else if (this.#y < -2 * this.#boxSize) {
+    if (this.#y >= height) {
+      this.#y = -this.#height;
+    } else if (this.#y < -this.#height) {
       this.#y = height;
     }
   }

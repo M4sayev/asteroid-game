@@ -32,7 +32,7 @@ class AsteroidGame {
     this.#width = width;
     this.#height = height;
 
-    this.#player = new Ship(50, 2);
+    this.#player = new Ship(45, 64, 3.5, 0.05);
 
     window.addEventListener("keydown", (e) => this.#setKey(e, true));
     window.addEventListener("keyup", (e) => this.#setKey(e, false));
