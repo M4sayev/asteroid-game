@@ -1,20 +1,25 @@
 export class Ship {
-  #x = 0;
-  #y = 0;
-  #angle = 0;
   #height;
   #width;
-  #speed;
   #img;
   #horizontal;
   #vertical;
-  #rotationSpeed;
+
+  #x = 0;
+  #y = 0;
+  #angle = 0;
+  #friction = 0.99;
+  #rotationSpeed = 0.02;
+  #maxV = 10;
+  #vx = 0;
+  #vy = 0;
+  #a = 0.01;
+
   static #DIAGONAL_MODIFIER = Math.SQRT1_2;
-  constructor(width, height, speed, rotationSpeed) {
-    this.#speed = speed;
+
+  constructor(width, height) {
     this.#width = width;
     this.#height = height;
-    this.#rotationSpeed = rotationSpeed;
 
     const img = new Image(this.#width, this.#height);
 
@@ -66,11 +71,24 @@ export class Ship {
     this.#horizontal = keys.d - keys.a;
     this.#vertical = keys.s - keys.w;
 
-    const currentCoeff =
-      this.#horizontal && this.#vertical ? Ship.#DIAGONAL_MODIFIER : 1;
+    this.#vx += this.#horizontal * this.#a;
+    this.#vx = Math.max(-this.#maxV, Math.min(this.#maxV, this.#vx));
 
-    this.#x += this.#horizontal * this.#speed * currentCoeff;
-    this.#y += this.#vertical * this.#speed * currentCoeff;
+    this.#vy += this.#vertical * this.#a;
+    this.#vy = Math.max(-this.#maxV, Math.min(this.#maxV, this.#vy));
+
+    if (!this.#horizontal) {
+      this.#vx *= this.#friction;
+    }
+
+    if (!this.#vertical) {
+      this.#vy *= this.#friction;
+    }
+
+    const currentCoeff = this.#vx && this.#vy ? Ship.#DIAGONAL_MODIFIER : 1;
+
+    this.#x += this.#vx * currentCoeff;
+    this.#y += this.#vy * currentCoeff;
 
     this.updateAngle();
   }
