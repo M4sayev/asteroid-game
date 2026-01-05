@@ -1,5 +1,5 @@
-import { Projectile } from "../projectile";
-import { Ship } from "../ship";
+import { Projectile } from "../entities/projectile.js";
+import { Ship } from "../entities/ship.js";
 
 export type KeyName =
   | "w"

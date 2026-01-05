@@ -1,4 +1,4 @@
-import { DIAGONAL_MODIFIER } from "./constants.js";
+import { DIAGONAL_MODIFIER } from "../constants/constants.js";
 DIAGONAL_MODIFIER;
 
 export class Projectile {
@@ -43,34 +43,34 @@ export class Projectile {
     return this.#height;
   }
 
-  move() {
+  public move(): void {
     const currentCoeff = this.#vx && this.#vy ? DIAGONAL_MODIFIER : 1;
 
     this.#x += this.#vx * currentCoeff;
     this.#y += this.#vy * currentCoeff;
   }
 
-  update(
+  public update(
     ctx: CanvasRenderingContext2D,
     canvasWidth: number,
     canvasHeight: number
-  ) {
+  ): void {
     this.draw(ctx);
     this.move();
     this.#handleOutOfBounds(canvasWidth, canvasHeight);
   }
 
-  #handleOutOfBounds(canvasWidth: number, canvasHeight: number) {
+  public draw(ctx: CanvasRenderingContext2D): void {
+    if (!this.#img) return;
+    ctx.drawImage(this.#img, this.#x, this.#y);
+  }
+
+  #handleOutOfBounds(canvasWidth: number, canvasHeight: number): void {
     if (this.#x >= canvasWidth || this.#x < -this.#width) {
       this.active = false;
     }
     if (this.#y >= canvasHeight || this.#y < -this.#height) {
       this.active = false;
     }
-  }
-
-  draw(ctx: CanvasRenderingContext2D) {
-    if (!this.#img) return;
-    ctx.drawImage(this.#img, this.#x, this.#y);
   }
 }

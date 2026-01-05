@@ -1,27 +1,11 @@
-import { Projectile } from "./projectile.js";
-import { Ship } from "./ship.js";
+import { defaultKeys, PLAYER_TWO_CONTROLS } from "./constants/constants.js";
+import { Projectile } from "./entities/projectile.js";
+import { Ship } from "./entities/ship.js";
 import type { EntityType, KeyName, KeyState } from "./types/types.js";
 
 Ship;
 
-window.onload = () => {
-  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  const ctx = canvas.getContext("2d");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  if (ctx) {
-    let asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
-
-    window.addEventListener("resize", () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
-    });
-  }
-};
-
-class AsteroidGame {
+export class AsteroidGame {
   #ctx: CanvasRenderingContext2D;
   #width: number;
   #height: number;
@@ -29,39 +13,18 @@ class AsteroidGame {
   #playerTwo: Ship;
   #P1Projectiles: Projectile[] = [];
   #P2Projectiles: Projectile[] = [];
-  #keys: KeyState = {
-    w: false,
-    s: false,
-    d: false,
-    a: false,
-    t: false,
-    ArrowUp: false,
-    ArrowDown: false,
-    ArrowLeft: false,
-    ArrowRight: false,
-    m: false,
-  };
+  #keys: KeyState = defaultKeys;
 
   constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
-    this.#P1Projectiles = [];
-    this.#P2Projectiles = [];
     this.#ctx = ctx;
     this.#width = width;
     this.#height = height;
 
     this.#playerOne = new Ship(45, 64);
-    this.#playerTwo = new Ship(
-      45,
-      64,
-      {
-        up: "ArrowUp",
-        down: "ArrowDown",
-        left: "ArrowLeft",
-        right: "ArrowRight",
-        shoot: "m",
-      },
-      { x: width - 45, y: height - 64 }
-    );
+    this.#playerTwo = new Ship(45, 64, PLAYER_TWO_CONTROLS, {
+      x: width - 45,
+      y: height - 64,
+    });
 
     window.addEventListener("keydown", (e) => this.#setKey(e, true));
     window.addEventListener("keyup", (e) => this.#setKey(e, false));
@@ -69,32 +32,12 @@ class AsteroidGame {
     this.loop();
   }
 
-  #checkCollision(objOne: EntityType, objTwo: EntityType): boolean {
-    const leftOne = objOne.x;
-    const rightOne = objOne.x + objOne.width;
-    const topOne = objOne.y;
-    const bottomOne = objOne.y + objOne.height;
-
-    const leftTwo = objTwo.x;
-    const rightTwo = objTwo.x + objTwo.width;
-    const topTwo = objTwo.y;
-    const bottomTwo = objTwo.y + objTwo.height;
-
-    return !(
-      rightOne < leftTwo ||
-      leftOne > rightTwo ||
-      topOne > bottomTwo ||
-      bottomOne < topTwo
-    );
+  public setDimensions(width: number, height: number): void {
+    this.#width = width;
+    this.#height = height;
   }
 
-  #setKey(e: KeyboardEvent, state: boolean): void {
-    let key = e.key;
-    if (e.key.length === 1) key = key.toLowerCase();
-    if (key in this.#keys) this.#keys[key as KeyName] = state;
-  }
-
-  loop(): void {
+  public loop(): void {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
 
     this.#addShotProjectiles();
@@ -142,5 +85,29 @@ class AsteroidGame {
   #destroyInactiveProjectiles(): void {
     this.#P1Projectiles = this.#P1Projectiles.filter((p) => p.active);
     this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
+  }
+  #checkCollision(objOne: EntityType, objTwo: EntityType): boolean {
+    const leftOne = objOne.x;
+    const rightOne = objOne.x + objOne.width;
+    const topOne = objOne.y;
+    const bottomOne = objOne.y + objOne.height;
+
+    const leftTwo = objTwo.x;
+    const rightTwo = objTwo.x + objTwo.width;
+    const topTwo = objTwo.y;
+    const bottomTwo = objTwo.y + objTwo.height;
+
+    return !(
+      rightOne < leftTwo ||
+      leftOne > rightTwo ||
+      topOne > bottomTwo ||
+      bottomOne < topTwo
+    );
+  }
+
+  #setKey(e: KeyboardEvent, state: boolean): void {
+    let key = e.key;
+    if (e.key.length === 1) key = key.toLowerCase();
+    if (key in this.#keys) this.#keys[key as KeyName] = state;
   }
 }

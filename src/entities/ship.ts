@@ -1,6 +1,9 @@
-import { DIAGONAL_MODIFIER } from "./constants.js";
+import {
+  DIAGONAL_MODIFIER,
+  PLAYER_ONE_CONTROLS,
+} from "../constants/constants.js";
 import { Projectile } from "./projectile.js";
-import { ControlsType, InitialCoordinates, KeyState } from "./types/types.js";
+import { ControlsType, InitialCoordinates, KeyState } from "../types/types.js";
 
 export class Ship {
   #height: number;
@@ -27,13 +30,7 @@ export class Ship {
   constructor(
     width: number,
     height: number,
-    controls: ControlsType = {
-      up: "w",
-      down: "s",
-      left: "a",
-      right: "d",
-      shoot: "t",
-    },
+    controls: ControlsType = PLAYER_ONE_CONTROLS,
     initialCoordinates: InitialCoordinates = { x: 0, y: 0 }
   ) {
     this.#width = width;
@@ -67,64 +64,54 @@ export class Ship {
     return this.#height;
   }
 
-  update(
+  public update(
     ctx: CanvasRenderingContext2D,
     keys: KeyState,
     canvasWidth: number,
     canvasHeight: number
   ) {
-    this.rotate(ctx);
-    this.move(keys);
+    this.#rotate(ctx);
+    this.#move(keys);
     this.#handleCooldown();
     this.#handleOutOfBounds(canvasWidth, canvasHeight);
   }
 
-  drawHitBox(ctx: CanvasRenderingContext2D) {
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(
-      -this.#width / 2,
-      -this.#height / 2,
-      this.#width,
-      this.#height
-    );
-  }
-
-  rotate(ctx: CanvasRenderingContext2D) {
-    if (!this.#img) return;
-    ctx.save();
-
-    ctx.translate(this.#x + this.#width / 2, this.#y + this.#height / 2);
-
-    ctx.rotate(this.#angle);
-    this.draw(ctx);
-
-    this.drawHitBox(ctx);
-
-    ctx.restore();
-  }
-
-  updateAngle(): void {
-    if (this.#horizontal !== 0 || this.#vertical !== 0) {
-      const targetAngle = Math.atan2(-this.#horizontal, this.#vertical);
-      let rawGap = targetAngle - this.#angle;
-      const gap = ((rawGap + Math.PI) % (Math.PI * 2)) - Math.PI;
-
-      this.#angle += gap * this.#rotationSpeed;
-    }
-  }
-
-  bounce(): void {
+  public bounce(): void {
     this.#vx *= -1;
     this.#vy *= -1;
   }
 
-  move(keys: KeyState): void {
-    this.#readInput(keys);
-    this.#applyAcceleration();
-    this.#applyFriction();
-    this.#applyMovement();
-    this.updateAngle();
+  public draw(ctx: CanvasRenderingContext2D): void {
+    if (!this.#img) return;
+    ctx.drawImage(this.#img, -this.#width / 2, -this.#height / 2);
+  }
+
+  public shoot(keys: KeyState) {
+    const { shoot: shootKey } = this.#controls;
+    if (keys[shootKey] && this.#cooldown === 0) {
+      this.#cooldown = this.#shootCooldown;
+      return new Projectile(
+        this.#x + this.#width / 2,
+        this.#y + this.#height / 2,
+        -Math.sin(this.#angle) * 10,
+        Math.cos(this.#angle) * 10,
+        this.#angle
+      );
+    }
+    return null;
+  }
+
+  public keepInBounds(canvasWidth: number, canvasHeight: number): void {
+    if (this.#x + this.#width > canvasWidth) {
+      this.#x = canvasWidth - this.#width;
+    }
+
+    if (this.#y + this.#height > canvasHeight) {
+      this.#y = canvasHeight - this.#height;
+    }
+
+    this.#x = Math.max(0, this.#x);
+    this.#y = Math.max(0, this.#y);
   }
 
   #readInput(keys: KeyState): void {
@@ -183,23 +170,46 @@ export class Ship {
     }
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
-    if (!this.#img) return;
-    ctx.drawImage(this.#img, -this.#width / 2, -this.#height / 2);
+  #drawHitBox(ctx: CanvasRenderingContext2D) {
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      -this.#width / 2,
+      -this.#height / 2,
+      this.#width,
+      this.#height
+    );
   }
 
-  shoot(keys: KeyState) {
-    const { shoot: shootKey } = this.#controls;
-    if (keys[shootKey] && this.#cooldown === 0) {
-      this.#cooldown = this.#shootCooldown;
-      return new Projectile(
-        this.#x + this.#width / 2,
-        this.#y + this.#height / 2,
-        -Math.sin(this.#angle) * 10,
-        Math.cos(this.#angle) * 10,
-        this.#angle
-      );
+  #rotate(ctx: CanvasRenderingContext2D) {
+    if (!this.#img) return;
+    ctx.save();
+
+    ctx.translate(this.#x + this.#width / 2, this.#y + this.#height / 2);
+
+    ctx.rotate(this.#angle);
+    this.draw(ctx);
+
+    this.#drawHitBox(ctx);
+
+    ctx.restore();
+  }
+
+  #updateAngle(): void {
+    if (this.#horizontal !== 0 || this.#vertical !== 0) {
+      const targetAngle = Math.atan2(-this.#horizontal, this.#vertical);
+      let rawGap = targetAngle - this.#angle;
+      const gap = ((rawGap + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+      this.#angle += gap * this.#rotationSpeed;
     }
-    return null;
+  }
+
+  #move(keys: KeyState): void {
+    this.#readInput(keys);
+    this.#applyAcceleration();
+    this.#applyFriction();
+    this.#applyMovement();
+    this.#updateAngle();
   }
 }
