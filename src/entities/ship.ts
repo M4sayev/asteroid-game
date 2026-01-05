@@ -4,14 +4,9 @@ import {
 } from "../constants/constants.js";
 import { Projectile } from "./projectile.js";
 import { ControlsType, InitialCoordinates, KeyState } from "../types/types.js";
+import { BaseEntity } from "./entity.js";
 
-export class Ship {
-  #height: number;
-  #width: number;
-  #x: number;
-  #y: number;
-
-  #img?: HTMLImageElement;
+export class Ship extends BaseEntity {
   #controls: ControlsType;
 
   #horizontal = 0;
@@ -31,37 +26,21 @@ export class Ship {
     width: number,
     height: number,
     controls: ControlsType = PLAYER_ONE_CONTROLS,
-    initialCoordinates: InitialCoordinates = { x: 0, y: 0 }
+    initialCoordinates: InitialCoordinates = { x: 0, y: 0 },
+    initialAngle = 0
   ) {
-    this.#width = width;
-    this.#height = height;
+    const { x, y } = initialCoordinates;
+    super(x, y, width, height);
     this.#controls = controls;
-    this.#x = initialCoordinates.x;
-    this.#y = initialCoordinates.y;
+    this.#angle = initialAngle;
 
-    const img = new Image(this.#width, this.#height);
+    const img = new Image(this.width, this.height);
 
     img.onload = () => {
-      this.#img = img;
+      this.img = img;
     };
 
     img.src = "assets/ship_64_45.png";
-  }
-
-  get x(): number {
-    return this.#x;
-  }
-
-  get y(): number {
-    return this.#y;
-  }
-
-  get width(): number {
-    return this.#width;
-  }
-
-  get height(): number {
-    return this.#height;
   }
 
   public update(
@@ -81,18 +60,13 @@ export class Ship {
     this.#vy *= -1;
   }
 
-  public draw(ctx: CanvasRenderingContext2D): void {
-    if (!this.#img) return;
-    ctx.drawImage(this.#img, -this.#width / 2, -this.#height / 2);
-  }
-
   public shoot(keys: KeyState) {
     const { shoot: shootKey } = this.#controls;
     if (keys[shootKey] && this.#cooldown === 0) {
       this.#cooldown = this.#shootCooldown;
       return new Projectile(
-        this.#x + this.#width / 2,
-        this.#y + this.#height / 2,
+        this.x + this.width / 2,
+        this.y + this.height / 2,
         -Math.sin(this.#angle) * 10,
         Math.cos(this.#angle) * 10,
         this.#angle
@@ -102,16 +76,16 @@ export class Ship {
   }
 
   public keepInBounds(canvasWidth: number, canvasHeight: number): void {
-    if (this.#x + this.#width > canvasWidth) {
-      this.#x = canvasWidth - this.#width;
+    if (this.x + this.width > canvasWidth) {
+      this.x = canvasWidth - this.width;
     }
 
-    if (this.#y + this.#height > canvasHeight) {
-      this.#y = canvasHeight - this.#height;
+    if (this.y + this.height > canvasHeight) {
+      this.y = canvasHeight - this.height;
     }
 
-    this.#x = Math.max(0, this.#x);
-    this.#y = Math.max(0, this.#y);
+    this.x = Math.max(0, this.x);
+    this.y = Math.max(0, this.y);
   }
 
   #readInput(keys: KeyState): void {
@@ -147,8 +121,8 @@ export class Ship {
   #applyMovement(): void {
     const currentCoeff = this.#vx && this.#vy ? DIAGONAL_MODIFIER : 1;
 
-    this.#x += this.#vx * currentCoeff;
-    this.#y += this.#vy * currentCoeff;
+    this.x += this.#vx * currentCoeff;
+    this.y += this.#vy * currentCoeff;
   }
 
   #handleCooldown(): void {
@@ -158,39 +132,28 @@ export class Ship {
   }
 
   #handleOutOfBounds(width: number, height: number): void {
-    if (this.#x >= width) {
-      this.#x = -this.#width;
-    } else if (this.#x < -this.#width) {
-      this.#x = width;
+    if (this.x >= width) {
+      this.x = -this.width;
+    } else if (this.x < -this.width) {
+      this.x = width;
     }
-    if (this.#y >= height) {
-      this.#y = -this.#height;
-    } else if (this.#y < -this.#height) {
-      this.#y = height;
+    if (this.y >= height) {
+      this.y = -this.height;
+    } else if (this.y < -this.height) {
+      this.y = height;
     }
-  }
-
-  #drawHitBox(ctx: CanvasRenderingContext2D) {
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(
-      -this.#width / 2,
-      -this.#height / 2,
-      this.#width,
-      this.#height
-    );
   }
 
   #rotate(ctx: CanvasRenderingContext2D) {
-    if (!this.#img) return;
+    if (!this.img) return;
     ctx.save();
 
-    ctx.translate(this.#x + this.#width / 2, this.#y + this.#height / 2);
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 
     ctx.rotate(this.#angle);
-    this.draw(ctx);
+    this.drawRelativeImage(ctx);
 
-    this.#drawHitBox(ctx);
+    this.drawHitBox(ctx);
 
     ctx.restore();
   }

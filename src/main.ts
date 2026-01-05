@@ -1,4 +1,6 @@
-import { AsteroidGame } from "./game.js";
+import { AsteroidGame, asteroidGameAnimation } from "./game.js";
+
+let asteroidGame: AsteroidGame;
 
 window.onload = () => {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -7,12 +9,13 @@ window.onload = () => {
   canvas.height = window.innerHeight;
 
   if (ctx) {
-    let asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
+    asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
 
     window.addEventListener("resize", () => {
+      cancelAnimationFrame(asteroidGameAnimation);
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      asteroidGame.setDimensions(canvas.width, canvas.height);
+      asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
     });
   }
 };

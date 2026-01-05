@@ -4,6 +4,7 @@ import { Ship } from "./entities/ship.js";
 import type { EntityType, KeyName, KeyState } from "./types/types.js";
 
 Ship;
+export let asteroidGameAnimation: number;
 
 export class AsteroidGame {
   #ctx: CanvasRenderingContext2D;
@@ -21,10 +22,16 @@ export class AsteroidGame {
     this.#height = height;
 
     this.#playerOne = new Ship(45, 64);
-    this.#playerTwo = new Ship(45, 64, PLAYER_TWO_CONTROLS, {
-      x: width - 45,
-      y: height - 64,
-    });
+    this.#playerTwo = new Ship(
+      45,
+      64,
+      PLAYER_TWO_CONTROLS,
+      {
+        x: width - 45,
+        y: height - 64,
+      },
+      Math.PI
+    );
 
     window.addEventListener("keydown", (e) => this.#setKey(e, true));
     window.addEventListener("keyup", (e) => this.#setKey(e, false));
@@ -53,7 +60,7 @@ export class AsteroidGame {
       this.#playerOne.bounce();
       this.#playerTwo.bounce();
     }
-    requestAnimationFrame(() => this.loop());
+    asteroidGameAnimation = requestAnimationFrame(() => this.loop());
   }
 
   #addShotProjectiles(): void {
@@ -87,21 +94,11 @@ export class AsteroidGame {
     this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
   }
   #checkCollision(objOne: EntityType, objTwo: EntityType): boolean {
-    const leftOne = objOne.x;
-    const rightOne = objOne.x + objOne.width;
-    const topOne = objOne.y;
-    const bottomOne = objOne.y + objOne.height;
-
-    const leftTwo = objTwo.x;
-    const rightTwo = objTwo.x + objTwo.width;
-    const topTwo = objTwo.y;
-    const bottomTwo = objTwo.y + objTwo.height;
-
     return !(
-      rightOne < leftTwo ||
-      leftOne > rightTwo ||
-      topOne > bottomTwo ||
-      bottomOne < topTwo
+      objOne.right < objTwo.left ||
+      objOne.left > objTwo.right ||
+      objOne.top > objTwo.bottom ||
+      objOne.bottom < objTwo.top
     );
   }
 
