@@ -37,3 +37,5 @@ export interface KeyState {
 }
 
 export type EntityType = Ship | Projectile;
+
+export type ColorType = "green" | "yellow" | "black" | "purple";

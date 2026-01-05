@@ -3,11 +3,26 @@ import {
   PLAYER_ONE_CONTROLS,
 } from "../constants/constants.js";
 import { Projectile } from "./projectile.js";
-import { ControlsType, InitialCoordinates, KeyState } from "../types/types.js";
+import {
+  ColorType,
+  ControlsType,
+  InitialCoordinates,
+  KeyState,
+} from "../types/types.js";
 import { BaseEntity } from "./entity.js";
+
+interface ShipConstructorArgs {
+  width?: number;
+  height?: number;
+  controls?: ControlsType;
+  initialCoordinates?: InitialCoordinates;
+  initialAngle?: number;
+  color?: ColorType;
+}
 
 export class Ship extends BaseEntity {
   #controls: ControlsType;
+  #color: ColorType;
 
   #horizontal = 0;
   #vertical = 0;
@@ -15,6 +30,7 @@ export class Ship extends BaseEntity {
   #vx = 0;
   #vy = 0;
   #cooldown = 0;
+  active = true;
 
   // constants
   #shootCooldown = 150;
@@ -22,17 +38,19 @@ export class Ship extends BaseEntity {
   #acceleration = 0.01;
   #rotationSpeed = 0.02;
   #friction = 0.99;
-  constructor(
-    width: number,
-    height: number,
-    controls: ControlsType = PLAYER_ONE_CONTROLS,
-    initialCoordinates: InitialCoordinates = { x: 0, y: 0 },
-    initialAngle = 0
-  ) {
+  constructor({
+    width = 45,
+    height = 64,
+    controls = PLAYER_ONE_CONTROLS,
+    initialCoordinates = { x: 0, y: 0 },
+    initialAngle = 0,
+    color = "black",
+  }: ShipConstructorArgs) {
     const { x, y } = initialCoordinates;
     super(x, y, width, height);
     this.#controls = controls;
     this.#angle = initialAngle;
+    this.#color = color;
 
     const img = new Image(this.width, this.height);
 
@@ -40,7 +58,7 @@ export class Ship extends BaseEntity {
       this.img = img;
     };
 
-    img.src = "assets/ship_64_45.png";
+    img.src = `assets/ship/ship_${this.#color}.png`;
   }
 
   public update(

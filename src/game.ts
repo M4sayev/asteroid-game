@@ -21,17 +21,16 @@ export class AsteroidGame {
     this.#width = width;
     this.#height = height;
 
-    this.#playerOne = new Ship(45, 64);
-    this.#playerTwo = new Ship(
-      45,
-      64,
-      PLAYER_TWO_CONTROLS,
-      {
+    this.#playerOne = new Ship({ color: "black" });
+    this.#playerTwo = new Ship({
+      controls: PLAYER_TWO_CONTROLS,
+      initialCoordinates: {
         x: width - 45,
         y: height - 64,
       },
-      Math.PI
-    );
+      initialAngle: Math.PI,
+      color: "purple",
+    });
 
     window.addEventListener("keydown", (e) => this.#setKey(e, true));
     window.addEventListener("keyup", (e) => this.#setKey(e, false));
@@ -53,8 +52,28 @@ export class AsteroidGame {
 
     this.#moveProjectiles();
 
-    this.#playerOne.update(this.#ctx, this.#keys, this.#width, this.#height);
-    this.#playerTwo.update(this.#ctx, this.#keys, this.#width, this.#height);
+    if (this.#playerOne.active) {
+      this.#playerOne.update(this.#ctx, this.#keys, this.#width, this.#height);
+    }
+    if (this.#playerTwo.active) {
+      this.#playerTwo.update(this.#ctx, this.#keys, this.#width, this.#height);
+    }
+
+    for (const p of this.#P1Projectiles) {
+      if (this.#checkCollision(p, this.#playerTwo)) {
+        p.active = false;
+        this.#playerTwo.active = false;
+        break;
+      }
+    }
+
+    for (const p of this.#P2Projectiles) {
+      if (this.#checkCollision(p, this.#playerOne)) {
+        p.active = false;
+        this.#playerOne.active = false;
+        break;
+      }
+    }
 
     if (this.#checkCollision(this.#playerOne, this.#playerTwo)) {
       this.#playerOne.bounce();

@@ -7,7 +7,14 @@ export class Projectile extends BaseEntity {
   #vy: number;
   #angle: number;
   active = false;
-  constructor(x: number, y: number, vx: number, vy: number, angle: number) {
+  constructor(
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    angle: number,
+    color = "black"
+  ) {
     super(x, y, 8, 15);
     this.#vx = vx;
     this.#vy = vy;
@@ -20,7 +27,7 @@ export class Projectile extends BaseEntity {
       this.img = img;
     };
 
-    img.src = "assets/projectile.png";
+    img.src = `assets/projectile/projectile_${color}.png`;
   }
 
   public update(
