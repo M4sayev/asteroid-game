@@ -5,6 +5,7 @@ export class Projectile {
   #vy;
   #x;
   #y;
+  #img;
   #angle;
   #width = 8;
   #height = 15;
@@ -16,6 +17,14 @@ export class Projectile {
     this.#vy = vy;
     this.#angle = angle;
     this.active = true;
+
+    const img = new Image(this.#width, this.#height);
+
+    img.onload = () => {
+      this.#img = img;
+    };
+
+    img.src = "assets/projectile.png";
   }
 
   move() {
@@ -41,6 +50,7 @@ export class Projectile {
   }
 
   draw(ctx) {
-    ctx.fillRect(this.#x, this.#y, this.#width, this.#height);
+    if (!this.#img) return;
+    ctx.drawImage(this.#img, this.#x, this.#y);
   }
 }

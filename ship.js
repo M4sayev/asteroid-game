@@ -1,5 +1,5 @@
 import { DIAGONAL_MODIFIER } from "./constants.js";
-import { Projectile } from "./Projectile.js";
+import { Projectile } from "./projectile.js";
 
 export class Ship {
   #height;
