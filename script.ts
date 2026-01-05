@@ -1,29 +1,35 @@
-import { Ship } from "./Ship.js";
+import { Projectile } from "./projectile.js";
+import { Ship } from "./ship.js";
+import { EntityType, KeyName, KeyState } from "./types/types.js";
+
+Ship;
 
 window.onload = () => {
-  const canvas = document.getElementById("canvas");
+  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  let asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
+  if (ctx) {
+    let asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
 
-  window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
-  });
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
+    });
+  }
 };
 
 class AsteroidGame {
-  #ctx;
-  #width;
-  #height;
-  #playerOne;
-  #playerTwo;
-  #P1Projectiles = [];
-  #P2Projectiles = [];
-  #keys = {
+  #ctx: CanvasRenderingContext2D;
+  #width: number;
+  #height: number;
+  #playerOne: Ship;
+  #playerTwo: Ship;
+  #P1Projectiles: Projectile[] = [];
+  #P2Projectiles: Projectile[] = [];
+  #keys: KeyState = {
     w: false,
     s: false,
     d: false,
@@ -36,7 +42,7 @@ class AsteroidGame {
     m: false,
   };
 
-  constructor(ctx, width, height) {
+  constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
     this.#P1Projectiles = [];
     this.#P2Projectiles = [];
     this.#ctx = ctx;
@@ -63,7 +69,7 @@ class AsteroidGame {
     this.loop();
   }
 
-  #checkCollision(objOne, objTwo) {
+  #checkCollision(objOne: EntityType, objTwo: EntityType): boolean {
     const leftOne = objOne.x;
     const rightOne = objOne.x + objOne.width;
     const topOne = objOne.y;
@@ -82,13 +88,13 @@ class AsteroidGame {
     );
   }
 
-  #setKey(e, state) {
+  #setKey(e: KeyboardEvent, state: boolean): void {
     let key = e.key;
     if (e.key.length === 1) key = key.toLowerCase();
-    if (key in this.#keys) this.#keys[key] = state;
+    if (key in this.#keys) this.#keys[key as KeyName] = state;
   }
 
-  loop() {
+  loop(): void {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
 
     this.#addShotProjectiles();
@@ -107,7 +113,7 @@ class AsteroidGame {
     requestAnimationFrame(() => this.loop());
   }
 
-  #addShotProjectiles() {
+  #addShotProjectiles(): void {
     const newProjectileOne = this.#playerOne.shoot(this.#keys);
     const newProjectileTwo = this.#playerTwo.shoot(this.#keys);
 
@@ -120,7 +126,7 @@ class AsteroidGame {
     }
   }
 
-  #moveProjectiles() {
+  #moveProjectiles(): void {
     if (this.#P1Projectiles.length > 0) {
       this.#P1Projectiles.forEach((p) =>
         p.update(this.#ctx, this.#width, this.#height)
@@ -133,7 +139,7 @@ class AsteroidGame {
     }
   }
 
-  #destroyInactiveProjectiles() {
+  #destroyInactiveProjectiles(): void {
     this.#P1Projectiles = this.#P1Projectiles.filter((p) => p.active);
     this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
   }

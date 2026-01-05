@@ -1,16 +1,18 @@
 import { DIAGONAL_MODIFIER } from "./constants.js";
 import { Projectile } from "./projectile.js";
+import { ControlsType, InitialCoordinates, KeyState } from "./types/types.js";
 
 export class Ship {
-  #height;
-  #width;
-  #img;
-  #horizontal;
-  #vertical;
-  #controls;
-  #x;
-  #y;
+  #height: number;
+  #width: number;
+  #x: number;
+  #y: number;
 
+  #img?: HTMLImageElement;
+  #controls: ControlsType;
+
+  #horizontal = 0;
+  #vertical = 0;
   #angle = 0;
   #vx = 0;
   #vy = 0;
@@ -23,12 +25,17 @@ export class Ship {
   #rotationSpeed = 0.02;
   #friction = 0.99;
   constructor(
-    width,
-    height,
-    controls = { up: "w", down: "s", left: "a", right: "d", shoot: "t" },
-    initialCoordinates = { x: 0, y: 0 }
+    width: number,
+    height: number,
+    controls: ControlsType = {
+      up: "w",
+      down: "s",
+      left: "a",
+      right: "d",
+      shoot: "t",
+    },
+    initialCoordinates: InitialCoordinates = { x: 0, y: 0 }
   ) {
-    console.log(controls);
     this.#width = width;
     this.#height = height;
     this.#controls = controls;
@@ -44,30 +51,35 @@ export class Ship {
     img.src = "assets/ship_64_45.png";
   }
 
-  get x() {
+  get x(): number {
     return this.#x;
   }
 
-  get y() {
+  get y(): number {
     return this.#y;
   }
 
-  get width() {
+  get width(): number {
     return this.#width;
   }
 
-  get height() {
+  get height(): number {
     return this.#height;
   }
 
-  update(ctx, keys, canvasWidth, canvasHeight) {
+  update(
+    ctx: CanvasRenderingContext2D,
+    keys: KeyState,
+    canvasWidth: number,
+    canvasHeight: number
+  ) {
     this.rotate(ctx);
     this.move(keys);
     this.#handleCooldown();
     this.#handleOutOfBounds(canvasWidth, canvasHeight);
   }
 
-  drawHitBox(ctx) {
+  drawHitBox(ctx: CanvasRenderingContext2D) {
     ctx.strokeStyle = "red";
     ctx.lineWidth = 2;
     ctx.strokeRect(
@@ -78,7 +90,7 @@ export class Ship {
     );
   }
 
-  rotate(ctx) {
+  rotate(ctx: CanvasRenderingContext2D) {
     if (!this.#img) return;
     ctx.save();
 
@@ -92,8 +104,8 @@ export class Ship {
     ctx.restore();
   }
 
-  updateAngle() {
-    if (this.#horizontal || this.#vertical) {
+  updateAngle(): void {
+    if (this.#horizontal !== 0 || this.#vertical !== 0) {
       const targetAngle = Math.atan2(-this.#horizontal, this.#vertical);
       let rawGap = targetAngle - this.#angle;
       const gap = ((rawGap + Math.PI) % (Math.PI * 2)) - Math.PI;
@@ -102,12 +114,12 @@ export class Ship {
     }
   }
 
-  bounce() {
+  bounce(): void {
     this.#vx *= -1;
     this.#vy *= -1;
   }
 
-  move(keys) {
+  move(keys: KeyState): void {
     this.#readInput(keys);
     this.#applyAcceleration();
     this.#applyFriction();
@@ -115,13 +127,13 @@ export class Ship {
     this.updateAngle();
   }
 
-  #readInput(keys) {
+  #readInput(keys: KeyState): void {
     const { left, right, up, down } = this.#controls;
-    this.#horizontal = keys[right] - keys[left];
-    this.#vertical = keys[down] - keys[up];
+    this.#horizontal = Number(keys[right]) - Number(keys[left]);
+    this.#vertical = Number(keys[down]) - Number(keys[up]);
   }
 
-  #applyAcceleration() {
+  #applyAcceleration(): void {
     this.#vx += this.#horizontal * this.#acceleration;
     this.#vx = Math.max(
       -this.#maxVelocity,
@@ -135,7 +147,7 @@ export class Ship {
     );
   }
 
-  #applyFriction() {
+  #applyFriction(): void {
     if (!this.#horizontal) {
       this.#vx *= this.#friction;
     }
@@ -145,20 +157,20 @@ export class Ship {
     }
   }
 
-  #applyMovement() {
+  #applyMovement(): void {
     const currentCoeff = this.#vx && this.#vy ? DIAGONAL_MODIFIER : 1;
 
     this.#x += this.#vx * currentCoeff;
     this.#y += this.#vy * currentCoeff;
   }
 
-  #handleCooldown() {
+  #handleCooldown(): void {
     if (this.#cooldown > 0) {
       this.#cooldown--;
     }
   }
 
-  #handleOutOfBounds(width, height) {
+  #handleOutOfBounds(width: number, height: number): void {
     if (this.#x >= width) {
       this.#x = -this.#width;
     } else if (this.#x < -this.#width) {
@@ -171,11 +183,12 @@ export class Ship {
     }
   }
 
-  draw(ctx) {
+  draw(ctx: CanvasRenderingContext2D): void {
+    if (!this.#img) return;
     ctx.drawImage(this.#img, -this.#width / 2, -this.#height / 2);
   }
 
-  shoot(keys) {
+  shoot(keys: KeyState) {
     const { shoot: shootKey } = this.#controls;
     if (keys[shootKey] && this.#cooldown === 0) {
       this.#cooldown = this.#shootCooldown;
