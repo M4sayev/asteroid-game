@@ -1,6 +1,6 @@
 import { Projectile } from "./projectile.js";
 import { Ship } from "./ship.js";
-import { EntityType, KeyName, KeyState } from "./types/types.js";
+import type { EntityType, KeyName, KeyState } from "./types/types.js";
 
 Ship;
 
