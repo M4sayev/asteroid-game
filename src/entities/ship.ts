@@ -70,7 +70,7 @@ export class Ship extends BaseEntity {
     this.#rotate(ctx);
     this.#move(keys);
     this.#handleCooldown();
-    this.#handleOutOfBounds(canvasWidth, canvasHeight);
+    this.handleOutOfBounds(canvasWidth, canvasHeight);
   }
 
   public bounce(): void {
@@ -85,8 +85,8 @@ export class Ship extends BaseEntity {
       return new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
-        -Math.sin(this.#angle) * 10,
-        Math.cos(this.#angle) * 10,
+        -Math.sin(this.#angle) * 10 + this.#vx,
+        Math.cos(this.#angle) * 10 + this.#vy,
         this.#angle
       );
     }
@@ -146,19 +146,6 @@ export class Ship extends BaseEntity {
   #handleCooldown(): void {
     if (this.#cooldown > 0) {
       this.#cooldown--;
-    }
-  }
-
-  #handleOutOfBounds(width: number, height: number): void {
-    if (this.x >= width) {
-      this.x = -this.width;
-    } else if (this.x < -this.width) {
-      this.x = width;
-    }
-    if (this.y >= height) {
-      this.y = -this.height;
-    } else if (this.y < -this.height) {
-      this.y = height;
     }
   }
 

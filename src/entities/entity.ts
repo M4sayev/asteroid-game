@@ -36,4 +36,17 @@ export class BaseEntity {
     if (!this.img) return;
     ctx.drawImage(this.img, -this.width / 2, -this.height / 2);
   }
+
+  protected handleOutOfBounds(width: number, height: number): void {
+    if (this.x >= width) {
+      this.x = -this.width;
+    } else if (this.x < -this.width) {
+      this.x = width;
+    }
+    if (this.y >= height) {
+      this.y = -this.height;
+    } else if (this.y < -this.height) {
+      this.y = height;
+    }
+  }
 }

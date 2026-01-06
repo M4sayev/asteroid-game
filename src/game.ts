@@ -15,13 +15,22 @@ export class AsteroidGame {
   #P1Projectiles: Projectile[] = [];
   #P2Projectiles: Projectile[] = [];
   #keys: KeyState = defaultKeys;
+  #bg?: HTMLImageElement;
 
   constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
     this.#ctx = ctx;
     this.#width = width;
     this.#height = height;
 
-    this.#playerOne = new Ship({ color: "black" });
+    const img = new Image();
+
+    img.onload = () => {
+      this.#bg = img;
+    };
+
+    img.src = "assets/bg.jpg";
+
+    this.#playerOne = new Ship({ color: "purple" });
     this.#playerTwo = new Ship({
       controls: PLAYER_TWO_CONTROLS,
       initialCoordinates: {
@@ -29,7 +38,7 @@ export class AsteroidGame {
         y: height - 64,
       },
       initialAngle: Math.PI,
-      color: "purple",
+      color: "black",
     });
 
     window.addEventListener("keydown", (e) => this.#setKey(e, true));
@@ -37,14 +46,12 @@ export class AsteroidGame {
 
     this.loop();
   }
-
-  public setDimensions(width: number, height: number): void {
-    this.#width = width;
-    this.#height = height;
-  }
-
   public loop(): void {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
+
+    if (this.#bg) {
+      this.#ctx.drawImage(this.#bg, 0, 0, this.#width, this.#height);
+    }
 
     this.#addShotProjectiles();
 
