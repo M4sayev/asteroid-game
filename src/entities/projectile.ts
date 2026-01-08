@@ -39,7 +39,7 @@ export class Projectile extends BaseEntity {
     ctx.translate(this.x + this.width / 2, this.y + this.width / 2);
     ctx.rotate(this.#angle);
     this.drawRelativeImage(ctx);
-    this.drawHitBox(ctx);
+    // this.drawHitBox(ctx);
     ctx.restore();
     this.#move();
     this.#handleOutOfBounds(canvasWidth, canvasHeight);

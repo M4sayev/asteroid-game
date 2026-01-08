@@ -28,7 +28,7 @@ export class AsteroidGame {
       this.#bg = img;
     };
 
-    img.src = "assets/bg.jpg";
+    img.src = "assets/bg-new.png";
 
     this.#playerOne = new Ship({ color: "purple" });
     this.#playerTwo = new Ship({
@@ -49,9 +49,7 @@ export class AsteroidGame {
   public loop(): void {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
 
-    if (this.#bg) {
-      this.#ctx.drawImage(this.#bg, 0, 0, this.#width, this.#height);
-    }
+    this.#drawBackground();
 
     this.#addShotProjectiles();
 
@@ -87,6 +85,23 @@ export class AsteroidGame {
       this.#playerTwo.bounce();
     }
     asteroidGameAnimation = requestAnimationFrame(() => this.loop());
+  }
+
+  #drawBackground(): void {
+    if (this.#bg) {
+      const scale = Math.max(
+        this.#width / this.#bg.width,
+        this.#height / this.#bg.height
+      );
+
+      const drawWidth = this.#bg.width * scale;
+      const drawHeight = this.#bg.height * scale;
+
+      const x = (this.#width - drawWidth) / 2;
+      const y = (this.#height - drawHeight) / 2;
+
+      this.#ctx.drawImage(this.#bg, x, y, drawWidth, drawHeight);
+    }
   }
 
   #addShotProjectiles(): void {

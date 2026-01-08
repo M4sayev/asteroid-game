@@ -158,7 +158,7 @@ export class Ship extends BaseEntity {
     ctx.rotate(this.#angle);
     this.drawRelativeImage(ctx);
 
-    this.drawHitBox(ctx);
+    // this.drawHitBox(ctx);
 
     ctx.restore();
   }
