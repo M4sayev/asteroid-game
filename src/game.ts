@@ -64,35 +64,11 @@ export class AsteroidGame {
 
     this.#destroyInactivePlayes();
 
-    for (const a of this.#asteroids) {
-      if (this.#checkCollision(a, this.#playerOne)) {
-        const { nx, ny } = this.#calculateCollisionNormal(a, this.#playerOne);
+    this.#handlePlayerToAsteroidCollision();
 
-        const { vx, vy } = this.#playerOne.getVelocity();
-        a.bouncePTA(vx, vy);
-        this.#playerOne.bounce(nx, ny);
-      }
-      if (this.#checkCollision(a, this.#playerTwo)) {
-        const { nx, ny } = this.#calculateCollisionNormal(a, this.#playerTwo);
+    this.#handleAsteroidToAsteroidCollision();
 
-        const { vx, vy } = this.#playerTwo.getVelocity();
-        a.bouncePTA(vx, vy);
-        this.#playerTwo.bounce(nx, ny);
-      }
-    }
-
-    for (let i = 0; i < asteroidCount; i++) {
-      for (let j = 0; j < asteroidCount; j++) {
-        const a1 = this.#asteroids[i];
-        const a2 = this.#asteroids[j];
-        if (j !== i && this.#checkCollision(a1, a2)) {
-          const result = a1.bounceATA(a2);
-          if (!result) {
-            a2.bounce();
-          }
-        }
-      }
-    }
+    this.#handleProjectileToAsteroidCollision();
 
     this.#handlePlayerCollision();
 
@@ -148,6 +124,56 @@ export class AsteroidGame {
     }
   }
 
+  #handleProjectileToAsteroidCollision() {
+    for (const projectile of this.#P1Projectiles) {
+      for (const asteroid of this.#asteroids) {
+        if (this.#checkCollision(projectile, asteroid)) {
+          projectile.active = false;
+        }
+      }
+    }
+  }
+
+  #handlePlayerToAsteroidCollision() {
+    for (const asteroid of this.#asteroids) {
+      if (this.#checkCollision(asteroid, this.#playerOne)) {
+        const { nx, ny } = this.#calculateCollisionNormal(
+          asteroid,
+          this.#playerOne
+        );
+
+        const { vx, vy } = this.#playerOne.getVelocity();
+        asteroid.bouncePTA(vx, vy, nx, ny);
+        this.#playerOne.bounce(nx, ny);
+      }
+      if (this.#checkCollision(asteroid, this.#playerTwo)) {
+        const { nx, ny } = this.#calculateCollisionNormal(
+          asteroid,
+          this.#playerTwo
+        );
+
+        const { vx, vy } = this.#playerTwo.getVelocity();
+        asteroid.bouncePTA(vx, vy, nx, ny);
+        this.#playerTwo.bounce(nx, ny);
+      }
+    }
+  }
+
+  #handleAsteroidToAsteroidCollision() {
+    for (let i = 0; i < asteroidCount; i++) {
+      for (let j = 0; j < asteroidCount; j++) {
+        const asteroid1 = this.#asteroids[i];
+        const asteroid2 = this.#asteroids[j];
+        if (j !== i && this.#checkCollision(asteroid1, asteroid2)) {
+          const result = asteroid1.bounceATA(asteroid2);
+          if (!result) {
+            asteroid2.bounce();
+          }
+        }
+      }
+    }
+  }
+
   #createPlayers(): void {
     this.#playerOne = new Ship({ color: "purple" });
     this.#playerTwo = new Ship({
@@ -162,8 +188,8 @@ export class AsteroidGame {
   }
 
   #drawAsteroids(): void {
-    this.#asteroids.forEach((ast) =>
-      ast.update(this.#ctx, this.#width, this.#height)
+    this.#asteroids.forEach((asteroid) =>
+      asteroid.update(this.#ctx, this.#width, this.#height)
     );
   }
 
@@ -203,13 +229,13 @@ export class AsteroidGame {
   }
   #moveProjectiles(): void {
     if (this.#P1Projectiles.length > 0) {
-      this.#P1Projectiles.forEach((p) =>
-        p.update(this.#ctx, this.#width, this.#height)
+      this.#P1Projectiles.forEach((projectile) =>
+        projectile.update(this.#ctx, this.#width, this.#height)
       );
     }
     if (this.#P2Projectiles.length > 0) {
-      this.#P2Projectiles.forEach((p) =>
-        p.update(this.#ctx, this.#width, this.#height)
+      this.#P2Projectiles.forEach((projectile) =>
+        projectile.update(this.#ctx, this.#width, this.#height)
       );
     }
   }
@@ -233,17 +259,17 @@ export class AsteroidGame {
   }
 
   #destroyInactivePlayes(): void {
-    for (const p of this.#P1Projectiles) {
-      if (this.#checkCollision(p, this.#playerTwo)) {
-        p.active = false;
+    for (const projectile of this.#P1Projectiles) {
+      if (this.#checkCollision(projectile, this.#playerTwo)) {
+        projectile.active = false;
         this.#playerTwo.active = false;
         break;
       }
     }
 
-    for (const p of this.#P2Projectiles) {
-      if (this.#checkCollision(p, this.#playerOne)) {
-        p.active = false;
+    for (const projectile of this.#P2Projectiles) {
+      if (this.#checkCollision(projectile, this.#playerOne)) {
+        projectile.active = false;
         this.#playerOne.active = false;
         break;
       }

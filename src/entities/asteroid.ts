@@ -42,9 +42,22 @@ export class Asteroid extends BaseEntity {
     this.handleOutOfBounds(canvasWidth, canvasHeight);
   }
 
-  public bouncePTA(incomingVx: number, incomingVy: number): void {
-    this.vx += incomingVx / this.mass;
-    this.vy += incomingVy / this.mass;
+  public bouncePTA(
+    incomingVx: number,
+    incomingVy: number,
+    nx: number,
+    ny: number
+  ): void {
+    const relVx = this.vx - incomingVx;
+    const relVy = this.vy - incomingVy;
+
+    const dot = relVx * nx + relVy * ny;
+    const reflVx = relVx - 2 * dot * nx;
+    const reflVy = relVy - 2 * dot * ny;
+
+    const restitution = 0.1;
+    this.vx = (reflVx + incomingVx) * restitution;
+    this.vy = (reflVy + incomingVy) * restitution;
   }
 
   public bounceATA(asteroid: Asteroid): boolean {
