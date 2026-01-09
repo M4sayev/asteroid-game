@@ -1,3 +1,4 @@
+import { Asteroid } from "../entities/asteroid.js";
 import { Projectile } from "../entities/projectile.js";
 import { Ship } from "../entities/ship.js";
 
@@ -36,6 +37,13 @@ export interface KeyState {
   m: boolean;
 }
 
-export type EntityType = Ship | Projectile;
+export type EntityType = Ship | Projectile | Asteroid;
 
 export type ColorType = "green" | "yellow" | "black" | "purple";
+
+export type AsteroidType = {
+  tag: string;
+  img: string;
+  diameter: number;
+  mass: number;
+};

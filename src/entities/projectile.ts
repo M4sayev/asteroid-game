@@ -3,8 +3,6 @@ import { BaseEntity } from "./entity.js";
 DIAGONAL_MODIFIER;
 
 export class Projectile extends BaseEntity {
-  #vx: number;
-  #vy: number;
   #angle: number;
   active = false;
   constructor(
@@ -16,8 +14,8 @@ export class Projectile extends BaseEntity {
     color = "black"
   ) {
     super(x, y, 8, 15);
-    this.#vx = vx;
-    this.#vy = vy;
+    this.vx = vx;
+    this.vy = vy;
     this.#angle = angle;
     this.active = true;
 
@@ -46,10 +44,10 @@ export class Projectile extends BaseEntity {
   }
 
   #move(): void {
-    const currentCoeff = this.#vx && this.#vy ? DIAGONAL_MODIFIER : 1;
+    const currentCoeff = this.vx && this.vy ? DIAGONAL_MODIFIER : 1;
 
-    this.x += this.#vx * currentCoeff;
-    this.y += this.#vy * currentCoeff;
+    this.x += this.vx * currentCoeff;
+    this.y += this.vy * currentCoeff;
   }
 
   #handleOutOfBounds(canvasWidth: number, canvasHeight: number): void {

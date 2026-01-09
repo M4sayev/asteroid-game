@@ -1,4 +1,11 @@
-import { defaultKeys, PLAYER_TWO_CONTROLS } from "./constants/constants.js";
+import {
+  asteroidCount,
+  defaultKeys,
+  maxObstacleSize,
+  PLAYER_TWO_CONTROLS,
+} from "./constants/constants.js";
+import { Asteroid } from "./entities/asteroid.js";
+import { BaseEntity } from "./entities/entity.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
 import type { EntityType, KeyName, KeyState } from "./types/types.js";
@@ -10,10 +17,11 @@ export class AsteroidGame {
   #ctx: CanvasRenderingContext2D;
   #width: number;
   #height: number;
-  #playerOne: Ship;
-  #playerTwo: Ship;
+  #playerOne!: Ship;
+  #playerTwo!: Ship;
   #P1Projectiles: Projectile[] = [];
   #P2Projectiles: Projectile[] = [];
+  #asteroids: Asteroid[] = [];
   #keys: KeyState = defaultKeys;
   #bg?: HTMLImageElement;
 
@@ -30,16 +38,9 @@ export class AsteroidGame {
 
     img.src = "assets/bg-new.png";
 
-    this.#playerOne = new Ship({ color: "purple" });
-    this.#playerTwo = new Ship({
-      controls: PLAYER_TWO_CONTROLS,
-      initialCoordinates: {
-        x: width - 45,
-        y: height - 64,
-      },
-      initialAngle: Math.PI,
-      color: "black",
-    });
+    this.#createPlayers();
+
+    this.#populateAsteroidsArray();
 
     window.addEventListener("keydown", (e) => this.#setKey(e, true));
     window.addEventListener("keyup", (e) => this.#setKey(e, false));
@@ -51,40 +52,119 @@ export class AsteroidGame {
 
     this.#drawBackground();
 
+    this.#drawAsteroids();
+
     this.#addShotProjectiles();
 
     this.#destroyInactiveProjectiles();
 
     this.#moveProjectiles();
 
-    if (this.#playerOne.active) {
-      this.#playerOne.update(this.#ctx, this.#keys, this.#width, this.#height);
-    }
-    if (this.#playerTwo.active) {
-      this.#playerTwo.update(this.#ctx, this.#keys, this.#width, this.#height);
-    }
+    this.#updateActivePlayers();
 
-    for (const p of this.#P1Projectiles) {
-      if (this.#checkCollision(p, this.#playerTwo)) {
-        p.active = false;
-        this.#playerTwo.active = false;
-        break;
+    this.#destroyInactivePlayes();
+
+    for (const a of this.#asteroids) {
+      if (this.#checkCollision(a, this.#playerOne)) {
+        const { nx, ny } = this.#calculateCollisionNormal(a, this.#playerOne);
+
+        const { vx, vy } = this.#playerOne.getVelocity();
+        a.bouncePTA(vx, vy);
+        this.#playerOne.bounce(nx, ny);
+      }
+      if (this.#checkCollision(a, this.#playerTwo)) {
+        const { nx, ny } = this.#calculateCollisionNormal(a, this.#playerTwo);
+
+        const { vx, vy } = this.#playerTwo.getVelocity();
+        a.bouncePTA(vx, vy);
+        this.#playerTwo.bounce(nx, ny);
       }
     }
 
-    for (const p of this.#P2Projectiles) {
-      if (this.#checkCollision(p, this.#playerOne)) {
-        p.active = false;
-        this.#playerOne.active = false;
-        break;
+    for (let i = 0; i < asteroidCount; i++) {
+      for (let j = 0; j < asteroidCount; j++) {
+        const a1 = this.#asteroids[i];
+        const a2 = this.#asteroids[j];
+        if (j !== i && this.#checkCollision(a1, a2)) {
+          const result = a1.bounceATA(a2);
+          if (!result) {
+            a2.bounce();
+          }
+        }
       }
     }
 
-    if (this.#checkCollision(this.#playerOne, this.#playerTwo)) {
-      this.#playerOne.bounce();
-      this.#playerTwo.bounce();
-    }
+    this.#handlePlayerCollision();
+
     asteroidGameAnimation = requestAnimationFrame(() => this.loop());
+  }
+
+  #calculateCollisionNormal(
+    entityOne: BaseEntity,
+    entityTwo: BaseEntity
+  ): { nx: number; ny: number } {
+    const { x: ax, y: ay } = entityOne.getCoordinates();
+    const { width: aWidth, height: aHeight } = entityOne.getSize();
+
+    const { x: bx, y: by } = entityTwo.getCoordinates();
+    const { width: bWidth, height: bHeight } = entityTwo.getSize();
+
+    const dx = ax + aWidth / 2 - (bx + bWidth / 2);
+    const dy = ay + aHeight / 2 - (by + bHeight / 2);
+    const dist = Math.hypot(dx, dy) || 1;
+
+    const nx = dx / dist;
+    const ny = dy / dist;
+    return { nx, ny };
+  }
+
+  #populateAsteroidsArray(): void {
+    for (let i = 1; i <= asteroidCount; i++) {
+      let { x, y } = this.#getRandomCoordinates();
+      let asteroid = new Asteroid(x, y);
+
+      let isOverlapping;
+      do {
+        ({ x, y } = this.#getRandomCoordinates());
+        asteroid = new Asteroid(x, y);
+
+        isOverlapping = false;
+
+        if (
+          this.#checkCollision(asteroid, this.#playerOne) ||
+          this.#checkCollision(asteroid, this.#playerTwo)
+        ) {
+          isOverlapping = true;
+        }
+
+        for (const ast of this.#asteroids) {
+          if (this.#checkCollision(ast, asteroid)) {
+            isOverlapping = true;
+            break;
+          }
+        }
+      } while (isOverlapping);
+      this.#asteroids.push(asteroid);
+    }
+  }
+
+  #createPlayers(): void {
+    this.#playerOne = new Ship({ color: "purple" });
+    this.#playerTwo = new Ship({
+      controls: PLAYER_TWO_CONTROLS,
+      initialCoordinates: {
+        x: this.#width - 45,
+        y: this.#height - 64,
+      },
+      initialAngle: Math.PI,
+      color: "black",
+    });
+  }
+
+  #drawAsteroids(): void {
+    this.#asteroids.forEach((ast) =>
+      ast.update(this.#ctx, this.#width, this.#height)
+    );
   }
 
   #drawBackground(): void {
@@ -117,6 +197,10 @@ export class AsteroidGame {
     }
   }
 
+  #destroyInactiveProjectiles(): void {
+    this.#P1Projectiles = this.#P1Projectiles.filter((p) => p.active);
+    this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
+  }
   #moveProjectiles(): void {
     if (this.#P1Projectiles.length > 0) {
       this.#P1Projectiles.forEach((p) =>
@@ -130,10 +214,15 @@ export class AsteroidGame {
     }
   }
 
-  #destroyInactiveProjectiles(): void {
-    this.#P1Projectiles = this.#P1Projectiles.filter((p) => p.active);
-    this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
+  #updateActivePlayers(): void {
+    if (this.#playerOne.active) {
+      this.#playerOne.update(this.#ctx, this.#keys, this.#width, this.#height);
+    }
+    if (this.#playerTwo.active) {
+      this.#playerTwo.update(this.#ctx, this.#keys, this.#width, this.#height);
+    }
   }
+
   #checkCollision(objOne: EntityType, objTwo: EntityType): boolean {
     return !(
       objOne.right < objTwo.left ||
@@ -143,9 +232,53 @@ export class AsteroidGame {
     );
   }
 
+  #destroyInactivePlayes(): void {
+    for (const p of this.#P1Projectiles) {
+      if (this.#checkCollision(p, this.#playerTwo)) {
+        p.active = false;
+        this.#playerTwo.active = false;
+        break;
+      }
+    }
+
+    for (const p of this.#P2Projectiles) {
+      if (this.#checkCollision(p, this.#playerOne)) {
+        p.active = false;
+        this.#playerOne.active = false;
+        break;
+      }
+    }
+  }
+
+  #handlePlayerCollision(): void {
+    if (this.#checkCollision(this.#playerOne, this.#playerTwo)) {
+      const { nx, ny } = this.#calculateCollisionNormal(
+        this.#playerOne,
+        this.#playerTwo
+      );
+      this.#playerOne.bounce(nx, ny);
+      this.#playerTwo.bounce(nx, ny);
+    }
+  }
+
   #setKey(e: KeyboardEvent, state: boolean): void {
     let key = e.key;
     if (e.key.length === 1) key = key.toLowerCase();
     if (key in this.#keys) this.#keys[key as KeyName] = state;
+  }
+
+  // x, y within bounds and maxObstacleSize pixels off the borders
+  #getRandomCoordinates(): { x: number; y: number } {
+    const randomX = Math.floor(Math.random() * this.#width);
+    const randomY = Math.floor(Math.random() * this.#height);
+    const x = Math.min(
+      this.#width - maxObstacleSize,
+      Math.max(randomX, maxObstacleSize)
+    );
+    const y = Math.min(
+      this.#height - maxObstacleSize,
+      Math.max(randomY, maxObstacleSize)
+    );
+    return { x, y };
   }
 }

@@ -1,3 +1,5 @@
+import { AsteroidType } from "../types/types.js";
+
 export const DIAGONAL_MODIFIER = Math.SQRT1_2;
 
 export const PLAYER_ONE_CONTROLS = {
@@ -28,3 +30,28 @@ export const defaultKeys = {
   ArrowRight: false,
   m: false,
 };
+
+export const asteroids: AsteroidType[] = [
+  {
+    tag: "gray asteroid",
+    img: "assets/obstacles/asteroid_gray.png",
+    diameter: 64,
+    mass: 50,
+  },
+  {
+    tag: "purple asteroid",
+    img: "assets/obstacles/asteroid_purple.png",
+    diameter: 64,
+    mass: 30,
+  },
+  {
+    tag: "small asteroid",
+    img: "assets/obstacles/asteroid_28.png",
+    diameter: 28,
+    mass: 10,
+  },
+];
+
+export const maxObstacleSize = 80;
+
+export const asteroidCount = 5;

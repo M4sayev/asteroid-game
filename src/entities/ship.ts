@@ -27,8 +27,6 @@ export class Ship extends BaseEntity {
   #horizontal = 0;
   #vertical = 0;
   #angle = 0;
-  #vx = 0;
-  #vy = 0;
   #cooldown = 0;
   active = true;
 
@@ -72,10 +70,10 @@ export class Ship extends BaseEntity {
     this.#handleCooldown();
     this.handleOutOfBounds(canvasWidth, canvasHeight);
   }
-
-  public bounce(): void {
-    this.#vx *= -1;
-    this.#vy *= -1;
+  public bounce(nx: number, ny: number): void {
+    const r = this.reflectVelocity(nx, ny);
+    this.vx = r.vx;
+    this.vy = r.vy;
   }
 
   public shoot(keys: KeyState) {
@@ -85,8 +83,8 @@ export class Ship extends BaseEntity {
       return new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
-        -Math.sin(this.#angle) * 10 + this.#vx,
-        Math.cos(this.#angle) * 10 + this.#vy,
+        -Math.sin(this.#angle) * 10 + this.vx,
+        Math.cos(this.#angle) * 10 + this.vy,
         this.#angle
       );
     }
@@ -113,34 +111,33 @@ export class Ship extends BaseEntity {
   }
 
   #applyAcceleration(): void {
-    this.#vx += this.#horizontal * this.#acceleration;
-    this.#vx = Math.max(
+    this.vx += this.#horizontal * this.#acceleration;
+    this.vx = Math.max(
       -this.#maxVelocity,
-      Math.min(this.#maxVelocity, this.#vx)
+      Math.min(this.#maxVelocity, this.vx)
     );
 
-    this.#vy += this.#vertical * this.#acceleration;
-    this.#vy = Math.max(
+    this.vy += this.#vertical * this.#acceleration;
+    this.vy = Math.max(
       -this.#maxVelocity,
-      Math.min(this.#maxVelocity, this.#vy)
+      Math.min(this.#maxVelocity, this.vy)
     );
   }
 
   #applyFriction(): void {
     if (!this.#horizontal) {
-      this.#vx *= this.#friction;
+      this.vx *= this.#friction;
     }
-
     if (!this.#vertical) {
-      this.#vy *= this.#friction;
+      this.vy *= this.#friction;
     }
   }
 
   #applyMovement(): void {
-    const currentCoeff = this.#vx && this.#vy ? DIAGONAL_MODIFIER : 1;
+    const currentCoeff = this.vx && this.vy ? DIAGONAL_MODIFIER : 1;
 
-    this.x += this.#vx * currentCoeff;
-    this.y += this.#vy * currentCoeff;
+    this.x += this.vx * currentCoeff;
+    this.y += this.vy * currentCoeff;
   }
 
   #handleCooldown(): void {
