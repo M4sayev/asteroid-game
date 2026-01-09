@@ -7,3 +7,83 @@ body {
 #canvas {
   display: block;
 }
+
+#menu {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+
+  align-items: center;
+  color: white;
+  font-family: sans-serif;
+}
+
+.menu__text {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2rem;
+
+  justify-content: center;
+}
+
+#startBtn {
+  font-size: 24px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.middle-space {
+  display: none;
+}
+
+.player-controls {
+  max-width: 70rem;
+  margin-inline: auto;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.menu__player {
+  min-height: 200px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 1;
+}
+
+.player__image {
+  transform: rotate(180deg) scale(2);
+}
+
+.player__image-controls {
+  position: absolute;
+  display: flex;
+  justify-content: space-between;
+
+  max-width: 12rem;
+  margin-inline: auto;
+  left: 0;
+  right: 0;
+}
+
+@media screen and (min-width: 720px) {
+  #menu {
+    flex-direction: row;
+  }
+  .middle-space {
+    display: block;
+    flex: 1;
+  }
+  .player-controls {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+}
