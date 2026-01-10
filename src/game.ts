@@ -8,6 +8,7 @@ import { Asteroid } from "./entities/asteroid.js";
 import { BaseEntity } from "./entities/entity.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
+import { currentColorP1, currentColorP2 } from "./menu.js";
 import type { EntityType, KeyName, KeyState } from "./types/types.js";
 
 Ship;
@@ -61,6 +62,8 @@ export class AsteroidGame {
     this.#moveProjectiles();
 
     this.#updateActivePlayers();
+
+    this.#handleChangePlayerColors();
 
     this.#destroyInactivePlayes();
 
@@ -175,7 +178,7 @@ export class AsteroidGame {
   }
 
   #createPlayers(): void {
-    this.#playerOne = new Ship({ color: "purple" });
+    this.#playerOne = new Ship({ color: currentColorP1 });
     this.#playerTwo = new Ship({
       controls: PLAYER_TWO_CONTROLS,
       initialCoordinates: {
@@ -183,7 +186,7 @@ export class AsteroidGame {
         y: this.#height - 64,
       },
       initialAngle: Math.PI,
-      color: "black",
+      color: currentColorP2,
     });
   }
 
@@ -273,6 +276,15 @@ export class AsteroidGame {
         this.#playerOne.active = false;
         break;
       }
+    }
+  }
+
+  #handleChangePlayerColors() {
+    if (this.#playerOne.getColor() !== currentColorP1) {
+      this.#playerOne.changeColor(currentColorP1);
+    }
+    if (this.#playerTwo.getColor() !== currentColorP2) {
+      this.#playerTwo.changeColor(currentColorP2);
     }
   }
 

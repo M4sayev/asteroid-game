@@ -50,13 +50,7 @@ export class Ship extends BaseEntity {
     this.#angle = initialAngle;
     this.#color = color;
 
-    const img = new Image(this.width, this.height);
-
-    img.onload = () => {
-      this.img = img;
-    };
-
-    img.src = `assets/ship/ship_${this.#color}.png`;
+    this.#initPlayerImage();
   }
 
   public update(
@@ -91,6 +85,16 @@ export class Ship extends BaseEntity {
     return null;
   }
 
+  public changeColor(newColor: ColorType): void {
+    this.#color = newColor;
+
+    this.#initPlayerImage();
+  }
+
+  public getColor(): ColorType {
+    return this.#color;
+  }
+
   public keepInBounds(canvasWidth: number, canvasHeight: number): void {
     if (this.x + this.width > canvasWidth) {
       this.x = canvasWidth - this.width;
@@ -104,6 +108,15 @@ export class Ship extends BaseEntity {
     this.y = Math.max(0, this.y);
   }
 
+  #initPlayerImage() {
+    const img = new Image(this.width, this.height);
+
+    img.onload = () => {
+      this.img = img;
+    };
+
+    img.src = `assets/ship/ship_${this.#color}.png`;
+  }
   #readInput(keys: KeyState): void {
     const { left, right, up, down } = this.#controls;
     this.#horizontal = Number(keys[right]) - Number(keys[left]);

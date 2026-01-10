@@ -1,4 +1,4 @@
-import { AsteroidType } from "../types/types.js";
+import { AsteroidType, ColorType } from "../types/types.js";
 
 export const DIAGONAL_MODIFIER = Math.SQRT1_2;
 
@@ -55,3 +55,10 @@ export const asteroids: AsteroidType[] = [
 export const maxObstacleSize = 80;
 
 export const asteroidCount = 5;
+
+export const playerColors: Record<ColorType, string> = {
+  black: "#1F1919",
+  purple: "#770D8F",
+  green: "#4BB524",
+  yellow: "#DEAB14",
+};

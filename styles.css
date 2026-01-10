@@ -33,9 +33,13 @@ body {
 }
 
 #startBtn {
+  z-index: 1;
   font-size: 24px;
   padding: 10px 20px;
   cursor: pointer;
+
+  background-color: antiquewhite;
+  filter: sepia(10);
 }
 
 .middle-space {
@@ -43,6 +47,8 @@ body {
 }
 
 .player-controls {
+  position: absolute;
+  top: 10%;
   max-width: 70rem;
   margin-inline: auto;
   width: 100%;
@@ -51,10 +57,12 @@ body {
 }
 
 .menu__player {
-  min-height: 200px;
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  justify-content: center;
   flex: 1;
 }
 
@@ -62,15 +70,27 @@ body {
   transform: rotate(180deg) scale(2);
 }
 
-.player__image-controls {
-  position: absolute;
+.color__picker {
   display: flex;
-  justify-content: space-between;
+  gap: 0.125rem;
+}
 
-  max-width: 12rem;
-  margin-inline: auto;
-  left: 0;
-  right: 0;
+.color__btn {
+  width: 25px;
+  height: 25px;
+  border-radius: 0.125rem;
+  border: 2px solid gray;
+  cursor: pointer;
+  transition: border-color 200ms ease-in-out;
+}
+
+.color__btn:hover,
+.color__btn:focus-visible {
+  border-color: white;
+}
+
+.color__btn[data-checked="true"] {
+  border-color: white;
 }
 
 @media screen and (min-width: 720px) {
@@ -83,6 +103,7 @@ body {
   }
   .player-controls {
     position: absolute;
+    top: auto;
     left: 0;
     right: 0;
   }

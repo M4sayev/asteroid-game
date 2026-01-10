@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-    />
+
     <title>Asteroid Game</title>
   </head>
   <body>
@@ -18,21 +15,22 @@
       </section>
       <div class="player-controls">
         <div id="playerOne" class="menu__player">
-          <div id="playerOneImage">
+          <div>
             <img
+              id="playerOneImage"
               src="assets/ship/ship_purple.png"
               alt="Purple Ship"
               class="player__image"
             />
           </div>
-          <!-- <div aria-controls="playerOneImage" class="player__image-controls">
-            <button id="playerOnePrev">
-              <i class="fa-solid fa-angle-left"></i>
-            </button>
-            <button id="playerTwoNext">
-              <i class="fa-solid fa-angle-right"></i>
-            </button>
-          </div> -->
+          <div aria-controls="playerOneImage" class="player__image-controls">
+            <div
+              class="color__picker"
+              id="colorPickerPlayerOne"
+              role="radiogroup"
+              aria-label="Color purple selected for player one"
+            ></div>
+          </div>
         </div>
 
         <div class="middle-space"></div>
@@ -40,10 +38,19 @@
         <div id="playerTwo" class="menu__player">
           <div>
             <img
+              id="playerTwoImage"
               src="assets/ship/ship_purple.png"
               alt="Purple Ship"
               class="player__image"
             />
+          </div>
+          <div aria-controls="playerOneImage" class="player__image-controls">
+            <div
+              class="color__picker"
+              id="colorPickerPlayerTwo"
+              role="radiogroup"
+              aria-label="Color purple selected for player two"
+            ></div>
           </div>
         </div>
       </div>
