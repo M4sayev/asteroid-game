@@ -5,12 +5,12 @@ let asteroidGame: AsteroidGame;
 
 initMenu();
 
-window.onload = () => {
+export function initGame() {
+  cancelAnimationFrame(asteroidGameAnimation);
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
   if (ctx) {
     asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
 
@@ -21,4 +21,8 @@ window.onload = () => {
       asteroidGame = new AsteroidGame(ctx, canvas.width, canvas.height);
     });
   }
+}
+
+window.onload = () => {
+  initGame();
 };

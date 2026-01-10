@@ -1,9 +1,12 @@
 import { defaultKeys, playerColors } from "./constants/constants.js";
+import { initGame } from "./main.js";
 import { initSettings } from "./settings.js";
 import { ColorType, PlayerNumber } from "./types/types.js";
 
 let isStarted = false;
+let isPaused = false;
 let menu: HTMLDivElement;
+let resumeMenu: HTMLDivElement;
 
 let colorPickerPlayerOne: HTMLDivElement;
 let colorPickerPlayerTwo: HTMLDivElement;
@@ -11,7 +14,6 @@ let colorPickerPlayerTwo: HTMLDivElement;
 let settingsMenu: HTMLDivElement;
 let settingsButton: HTMLButtonElement;
 
-const closeBtn = document.querySelector(".close-btn") as HTMLButtonElement;
 let isSettingsOpen = false;
 
 const focusableElements: string =
@@ -23,7 +25,10 @@ export let currentColorP1: ColorType = "purple";
 export let currentColorP2: ColorType = "purple";
 
 export function initMenu() {
-  const button = document.getElementById("startBtn") as HTMLButtonElement;
+  const resumeBtn = document.getElementById("resumeBtn") as HTMLButtonElement;
+  const restartBtn = document.getElementById("restartBtn") as HTMLButtonElement;
+
+  const startButton = document.getElementById("startBtn") as HTMLButtonElement;
 
   // attach event listener to settings
   settingsButton = document.getElementById("settingsBtn") as HTMLButtonElement;
@@ -37,6 +42,8 @@ export function initMenu() {
   });
 
   menu = document.getElementById("menu") as HTMLDivElement;
+
+  resumeMenu = document.getElementById("esc-menu") as HTMLDivElement;
 
   // set players
   const imgP1 = document.getElementById("playerOneImage") as HTMLImageElement;
@@ -75,7 +82,11 @@ export function initMenu() {
     }
   });
 
-  button.addEventListener("click", handleButtonClick);
+  startButton.addEventListener("click", handleButtonClick);
+
+  resumeBtn.addEventListener("click", closeResumeMenu);
+
+  restartBtn.addEventListener("click", restartGame);
 
   window.onkeydown = handleKeyDown;
 
@@ -132,18 +143,47 @@ function populateColorBtns(
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  console.log(event.key);
-  if (event.key === "Escape") {
-    isStarted = false;
-    menu.style.display = "flex";
-    // initMenu();
+  console.log({ isPaused });
+  if (event.key === "Escape" && !isPaused && isStarted) {
+    openResumeMenu();
+  } else if (event.key === "Escape" && isPaused) {
+    closeResumeMenu();
   }
-  if (!isStarted && event.key in defaultKeys) {
+  if ((!isStarted || isPaused) && event.key in defaultKeys) {
     event.stopImmediatePropagation();
   }
 }
 
 function handleButtonClick() {
+  closeMenu();
+  closeResumeMenu();
+}
+
+function restartGame() {
+  closeResumeMenu();
+  openMenu();
+  initGame();
+}
+
+function openMenu() {
+  menu.style.display = "flex";
+  isStarted = false;
+}
+
+function closeMenu() {
   menu.style.display = "none";
   isStarted = true;
+}
+
+function closeResumeMenu() {
+  isPaused = false;
+  resumeMenu.style.display = "none";
+  document.documentElement.style.setProperty("--btn-theme", "#770d8f");
+}
+
+function openResumeMenu() {
+  isPaused = true;
+
+  resumeMenu.style.display = "flex";
+  document.documentElement.style.setProperty("--btn-theme", "#deab14");
 }

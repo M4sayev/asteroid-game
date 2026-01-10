@@ -15,13 +15,21 @@
   <body>
     <div id="esc-menu" class="menu">
       <section class="menu-text">
-        <h1>Asteroid Shooter</h1>
-        <button id="startBt">
-          <span class="left"></span>
-          <span class="right"></span>
-          Start Game
-          <span class="top"></span>
-          <span class="bottom"></span>
+        <h1 class="std-heading">Asteroid Shooter</h1>
+
+        <button
+          id="restartBtn"
+          class="secondary-btn"
+          aria-label="start a new game"
+        >
+          Restart
+        </button>
+        <button id="resumeBtn" class="game-button" aria-label="resume the game">
+          <span class="border-span left"></span>
+          <span class="border-span right"></span>
+          Resume
+          <span class="border-span top"></span>
+          <span class="border-span bottom"></span>
         </button>
       </section>
     </div>
@@ -48,11 +56,15 @@
       </div>
       <!-- text area -->
       <section class="menu-text">
-        <h1>Asteroid Shooter</h1>
-        <button id="settingsBtn" aria-label="open the settings menu">
+        <h1 class="std-heading">Asteroid Shooter</h1>
+        <button
+          id="settingsBtn"
+          class="secondary-btn"
+          aria-label="open the settings menu"
+        >
           Settings
         </button>
-        <button id="startBtn" aria-label="start the game">
+        <button id="startBtn" class="game-button" aria-label="start the game">
           <span class="border-span left"></span>
           <span class="border-span right"></span>
           Start Game
