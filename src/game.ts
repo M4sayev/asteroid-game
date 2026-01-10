@@ -8,7 +8,7 @@ import { Asteroid } from "./entities/asteroid.js";
 import { BaseEntity } from "./entities/entity.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
-import { currentColorP1, currentColorP2 } from "./menu.js";
+import { currentColorP1, currentColorP2 } from "./menu/menuState.js";
 import type { EntityType, KeyName, KeyState } from "./types/types.js";
 
 Ship;

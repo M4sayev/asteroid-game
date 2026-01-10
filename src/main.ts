@@ -1,5 +1,5 @@
 import { AsteroidGame, asteroidGameAnimation } from "./game.js";
-import { initMenu } from "./menu.js";
+import { initMenu } from "./menu/menu.js";
 
 let asteroidGame: AsteroidGame;
 

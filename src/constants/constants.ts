@@ -1,8 +1,8 @@
-import { AsteroidType, ColorType } from "../types/types.js";
+import { AsteroidType, ColorType, ControlsType } from "../types/types.js";
 
 export const DIAGONAL_MODIFIER = Math.SQRT1_2;
 
-export const PLAYER_ONE_CONTROLS = {
+export const PLAYER_ONE_CONTROLS: ControlsType = {
   up: "w",
   down: "s",
   left: "a",
@@ -10,7 +10,7 @@ export const PLAYER_ONE_CONTROLS = {
   shoot: "t",
 } as const;
 
-export const PLAYER_TWO_CONTROLS = {
+export const PLAYER_TWO_CONTROLS: ControlsType = {
   up: "ArrowUp",
   down: "ArrowDown",
   left: "ArrowLeft",
