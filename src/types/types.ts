@@ -47,3 +47,5 @@ export type AsteroidType = {
   diameter: number;
   mass: number;
 };
+
+export type PlayerNumber = "one" | "two";

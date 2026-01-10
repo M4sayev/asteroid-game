@@ -4,28 +4,77 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles.css" />
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap"
+      rel="stylesheet"
+    />
     <title>Asteroid Game</title>
   </head>
   <body>
-    <div id="menu">
-      <section class="menu__text">
+    <div id="esc-menu" class="menu">
+      <section class="menu-text">
         <h1>Asteroid Shooter</h1>
-        <button id="startBtn">Start Game</button>
+        <button id="startBt">
+          <span class="left"></span>
+          <span class="right"></span>
+          Start Game
+          <span class="top"></span>
+          <span class="bottom"></span>
+        </button>
       </section>
+    </div>
+
+    <!-- main menu -->
+
+    <div id="menu" class="menu">
+      <div class="settings-menu" role="dialog" aria-modal="true">
+        <div class="settings-menu-contents">
+          <button class="close-btn" aria-label="close the setting menu">
+            <img
+              class="close-setting-img"
+              src="assets/icons/close-btn.png"
+              alt=""
+            />
+          </button>
+          <h2 style="text-align: center">Player Settings</h2>
+          <div class="setting-controls" id="keyboardSettings"></div>
+        </div>
+        <span class="border-span left"></span>
+        <span class="border-span right"></span>
+        <span class="border-span top"></span>
+        <span class="border-span bottom"></span>
+      </div>
+      <!-- text area -->
+      <section class="menu-text">
+        <h1>Asteroid Shooter</h1>
+        <button id="settingsBtn" aria-label="open the settings menu">
+          Settings
+        </button>
+        <button id="startBtn" aria-label="start the game">
+          <span class="border-span left"></span>
+          <span class="border-span right"></span>
+          Start Game
+          <span class="border-span top"></span>
+          <span class="border-span bottom"></span>
+        </button>
+      </section>
+      <!-- player controls  -->
       <div class="player-controls">
-        <div id="playerOne" class="menu__player">
+        <!-- first player controls -->
+        <div id="playerOne" class="menu-player">
           <div>
             <img
               id="playerOneImage"
               src="assets/ship/ship_purple.png"
               alt="Purple Ship"
-              class="player__image"
+              class="player-image"
             />
           </div>
-          <div aria-controls="playerOneImage" class="player__image-controls">
+          <div aria-controls="playerOneImage" class="player-image-controls">
             <div
-              class="color__picker"
+              class="color-picker"
               id="colorPickerPlayerOne"
               role="radiogroup"
               aria-label="Color purple selected for player one"
@@ -35,18 +84,19 @@
 
         <div class="middle-space"></div>
 
-        <div id="playerTwo" class="menu__player">
+        <!-- second player controls -->
+        <div id="playerTwo" class="menu-player">
           <div>
             <img
               id="playerTwoImage"
               src="assets/ship/ship_purple.png"
               alt="Purple Ship"
-              class="player__image"
+              class="player-image"
             />
           </div>
-          <div aria-controls="playerOneImage" class="player__image-controls">
+          <div aria-controls="playerOneImage" class="player-image-controls">
             <div
-              class="color__picker"
+              class="color-picker"
               id="colorPickerPlayerTwo"
               role="radiogroup"
               aria-label="Color purple selected for player two"
