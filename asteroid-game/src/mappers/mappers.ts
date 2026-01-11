@@ -1,5 +1,5 @@
 // to convert ArrowUp to just arrows
-import { KeyName } from "../types/types";
+import type { KeyName } from "../types/types";
 
 export const playerTwoKeysMap: Partial<Record<KeyName, string>> = {
   ArrowDown: `<img aria-hidden="true" src="assets/icons/arrow.svg" style="transform: rotate(180deg);"></img>`,

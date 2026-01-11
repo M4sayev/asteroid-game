@@ -5,7 +5,7 @@ import {
 import { playerTwoKeysMap } from "../mappers/mappers";
 import { border } from "../template/reusable";
 import { instructionItem, playerSettingsTemplate } from "../template/settings";
-import { ControlsType, KeyName } from "../types/types";
+import type { ControlsType, KeyName } from "../types/types";
 import { camelToNormal } from "../utils/utils";
 
 type ControlKeyType = [keyof ControlsType, KeyName];

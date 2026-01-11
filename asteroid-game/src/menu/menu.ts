@@ -4,16 +4,12 @@ import { initColorPickers } from "./colorPicker.js";
 import {
   closeMenu,
   closeResumeMenu,
-  initMenuControls,
   openMenu,
   openResumeMenu,
 } from "./menuControls.js";
 import { isPaused, isStarted, setIsSettingsOpen } from "./menuState.js";
 import { initSettings } from "../settings/settings.js";
 import { trapFocus } from "../utils/utils.js";
-
-let settingsMenu: HTMLDivElement;
-let settingsButton: HTMLButtonElement;
 
 export function initMenu() {
   const resumeBtn = document.getElementById("resumeBtn") as HTMLButtonElement;
@@ -22,17 +18,19 @@ export function initMenu() {
   const startButton = document.getElementById("startBtn") as HTMLButtonElement;
 
   // attach event listener to settings
-  settingsButton = document.getElementById("settingsBtn") as HTMLButtonElement;
+  const settingsButton = document.getElementById(
+    "settingsBtn"
+  ) as HTMLButtonElement;
 
-  settingsMenu = document.querySelector(".settings-menu") as HTMLDivElement;
+  const settingsMenu = document.querySelector(
+    ".settings-menu"
+  ) as HTMLDivElement;
 
   settingsButton.addEventListener("click", () => {
     settingsMenu.style.display = "block";
     setIsSettingsOpen(true);
     trapFocus(settingsMenu);
   });
-
-  initMenuControls();
 
   // set players
   const imgP1 = document.getElementById("playerOneImage") as HTMLImageElement;

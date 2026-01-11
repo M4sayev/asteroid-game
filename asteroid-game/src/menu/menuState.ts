@@ -1,4 +1,4 @@
-import { ColorType } from "../types/types.js";
+import type { ColorType } from "../types/types.js";
 
 export let isStarted = false;
 export let isPaused = false;
