@@ -1,4 +1,6 @@
+import type { powerUpCountMap } from "../constants/constants.js";
 import { Asteroid } from "../entities/asteroid.js";
+import type { AoePowerUp } from "../entities/powerup.js";
 import { Projectile } from "../entities/projectile.js";
 import { Ship } from "../entities/ship.js";
 
@@ -37,7 +39,7 @@ export interface KeyState {
   m: boolean;
 }
 
-export type EntityType = Ship | Projectile | Asteroid;
+export type EntityType = Ship | Projectile | Asteroid | AoePowerUp;
 
 export type ColorType = "green" | "yellow" | "black" | "purple";
 
@@ -49,3 +51,5 @@ export type AsteroidType = {
 };
 
 export type PlayerNumber = "one" | "two";
+
+export type PowerUpType = keyof typeof powerUpCountMap;

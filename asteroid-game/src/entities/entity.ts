@@ -8,6 +8,7 @@ export class BaseEntity {
   protected vy: number = 0;
   protected mass: number = 1;
   protected img?: HTMLImageElement;
+  protected angle: number = 0;
 
   constructor(x: number, y: number, width: number, height: number) {
     this.x = x;
@@ -51,6 +52,14 @@ export class BaseEntity {
       vx: this.vx - 2 * dot * nx,
       vy: this.vy - 2 * dot * ny,
     };
+  }
+
+  protected revolve(
+    ctx: CanvasRenderingContext2D,
+    revolveCoeffiecient: number = 0.001
+  ) {
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+    ctx.rotate((this.angle += revolveCoeffiecient));
   }
 
   protected drawHitBox(ctx: CanvasRenderingContext2D) {

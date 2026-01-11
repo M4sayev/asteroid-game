@@ -26,7 +26,6 @@ export class Ship extends BaseEntity {
 
   #horizontal = 0;
   #vertical = 0;
-  #angle = 0;
   #cooldown = 0;
   active = true;
 
@@ -36,6 +35,7 @@ export class Ship extends BaseEntity {
   #acceleration = 0.01;
   #rotationSpeed = 0.02;
   #friction = 0.99;
+  #aoeProjectileCount = 6;
   constructor({
     width = 45,
     height = 64,
@@ -47,7 +47,7 @@ export class Ship extends BaseEntity {
     const { x, y } = initialCoordinates;
     super(x, y, width, height);
     this.#controls = controls;
-    this.#angle = initialAngle;
+    this.angle = initialAngle;
     this.#color = color;
 
     this.#initPlayerImage();
@@ -58,7 +58,7 @@ export class Ship extends BaseEntity {
     keys: KeyState,
     canvasWidth: number,
     canvasHeight: number
-  ) {
+  ): void {
     this.#rotate(ctx);
     this.#move(keys);
     this.#handleCooldown();
@@ -70,19 +70,34 @@ export class Ship extends BaseEntity {
     this.vy = r.vy;
   }
 
-  public shoot(keys: KeyState) {
+  public shoot(keys: KeyState): null | Projectile {
     const { shoot: shootKey } = this.#controls;
     if (keys[shootKey] && this.#cooldown === 0) {
       this.#cooldown = this.#shootCooldown;
       return new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
-        -Math.sin(this.#angle) * 10 + this.vx,
-        Math.cos(this.#angle) * 10 + this.vy,
-        this.#angle
+        -Math.sin(this.angle) * 10 + this.vx,
+        Math.cos(this.angle) * 10 + this.vy,
+        this.angle
       );
     }
     return null;
+  }
+
+  public usePowerUp(): Projectile[] {
+    const projectiles: Projectile[] = [];
+    for (let i = 1; i <= this.#aoeProjectileCount; i++) {
+      const newProjectile = new Projectile(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        -Math.sin(this.angle + i) * 10 + this.vx,
+        Math.cos(this.angle + i) * 10 + this.vy,
+        this.angle + i
+      );
+      projectiles.push(newProjectile);
+    }
+    return projectiles;
   }
 
   public changeColor(newColor: ColorType): void {
@@ -165,7 +180,7 @@ export class Ship extends BaseEntity {
 
     ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 
-    ctx.rotate(this.#angle);
+    ctx.rotate(this.angle);
     this.drawRelativeImage(ctx);
 
     // this.drawHitBox(ctx);
@@ -176,10 +191,10 @@ export class Ship extends BaseEntity {
   #updateAngle(): void {
     if (this.#horizontal !== 0 || this.#vertical !== 0) {
       const targetAngle = Math.atan2(-this.#horizontal, this.#vertical);
-      let rawGap = targetAngle - this.#angle;
+      let rawGap = targetAngle - this.angle;
       const gap = ((rawGap + Math.PI) % (Math.PI * 2)) - Math.PI;
 
-      this.#angle += gap * this.#rotationSpeed;
+      this.angle += gap * this.#rotationSpeed;
     }
   }
 

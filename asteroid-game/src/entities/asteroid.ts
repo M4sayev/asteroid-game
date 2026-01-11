@@ -5,7 +5,6 @@ export class Asteroid extends BaseEntity {
   #friction: number = 0.99;
   vx = 0;
   vy = 0;
-  #angle = 0;
 
   constructor(x: number, y: number) {
     const randomIndex = Math.floor(Math.random() * asteroids.length);
@@ -18,7 +17,7 @@ export class Asteroid extends BaseEntity {
 
     super(x, y, asteroidImg.diameter, asteroidImg.diameter);
 
-    this.#angle = randomAngle;
+    this.angle = randomAngle;
     this.mass = asteroidImg.mass;
 
     const asset = new Image();
@@ -34,7 +33,7 @@ export class Asteroid extends BaseEntity {
     canvasHeight: number
   ): void {
     ctx.save();
-    this.#rotate(ctx);
+    this.revolve(ctx);
     this.drawRelativeImage(ctx);
     this.#move();
     this.#applyFriction();
@@ -84,11 +83,6 @@ export class Asteroid extends BaseEntity {
   public stop() {
     this.vx = 0;
     this.vy = 0;
-  }
-
-  #rotate(ctx: CanvasRenderingContext2D) {
-    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-    ctx.rotate((this.#angle += 0.001));
   }
 
   #applyFriction(): void {

@@ -4,16 +4,16 @@ export const DIAGONAL_MODIFIER = Math.SQRT1_2;
 
 export const PLAYER_ONE_CONTROLS: ControlsType = {
   up: "w",
-  down: "s",
   left: "a",
+  down: "s",
   right: "d",
   shoot: "t",
 } as const;
 
 export const PLAYER_TWO_CONTROLS: ControlsType = {
   up: "ArrowUp",
-  down: "ArrowDown",
   left: "ArrowLeft",
+  down: "ArrowDown",
   right: "ArrowRight",
   shoot: "m",
 } as const;
@@ -55,6 +55,11 @@ export const asteroids: AsteroidType[] = [
 export const maxObstacleSize = 80;
 
 export const asteroidCount = 5;
+
+export const powerUpCountMap = {
+  aoe: 2,
+  laser: 3,
+};
 
 export const playerColors: Record<ColorType, string> = {
   black: "#1F1919",

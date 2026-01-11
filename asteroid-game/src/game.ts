@@ -3,9 +3,11 @@ import {
   defaultKeys,
   maxObstacleSize,
   PLAYER_TWO_CONTROLS,
+  powerUpCountMap,
 } from "./constants/constants.js";
 import { Asteroid } from "./entities/asteroid.js";
 import { BaseEntity } from "./entities/entity.js";
+import { AoePowerUp } from "./entities/powerup.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
 import { currentColorP1, currentColorP2 } from "./menu/menuState.js";
@@ -23,9 +25,11 @@ export class AsteroidGame {
   #P1Projectiles: Projectile[] = [];
   #P2Projectiles: Projectile[] = [];
   #asteroids: Asteroid[] = [];
+  #powerups: AoePowerUp[] = [];
   #keys: KeyState = defaultKeys;
   #bg?: HTMLImageElement;
 
+  #powerUpCooldown: number = AoePowerUp.aoePowerUpCooldown;
   constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
     this.#ctx = ctx;
     this.#width = width;
@@ -51,9 +55,19 @@ export class AsteroidGame {
   public loop(): void {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
 
+    this.#populatePowerUps();
+
     this.#drawBackground();
 
     this.#drawAsteroids();
+
+    this.#drawPowerUps();
+
+    this.#collectPowerUps();
+
+    this.#handlePowerUpCooldown();
+
+    this.#destroyInactivePowerUps();
 
     this.#addShotProjectiles();
 
@@ -76,6 +90,74 @@ export class AsteroidGame {
     this.#handlePlayerCollision();
 
     asteroidGameAnimation = requestAnimationFrame(() => this.loop());
+  }
+
+  #drawPowerUps(): void {
+    for (const powerUp of this.#powerups) {
+      if (powerUp.active) powerUp.update(this.#ctx);
+    }
+  }
+
+  #handlePowerUpCooldown(): void {
+    if (this.#powerUpCooldown > 0) {
+      this.#powerUpCooldown--;
+    }
+  }
+
+  #populatePowerUps(): void {
+    if (this.#powerups.length >= powerUpCountMap["aoe"]) {
+      this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
+      return;
+    }
+
+    if (this.#powerUpCooldown > 0) return;
+
+    for (let i = 1; i <= powerUpCountMap["aoe"]; i++) {
+      let { x, y } = this.#getRandomCoordinates();
+      let powerUp = new AoePowerUp(x, y);
+
+      let isOverlapping;
+
+      do {
+        ({ x, y } = this.#getRandomCoordinates());
+        powerUp = new AoePowerUp(x, y);
+
+        isOverlapping = false;
+
+        if (
+          this.#checkCollision(powerUp, this.#playerOne) ||
+          this.#checkCollision(powerUp, this.#playerTwo)
+        ) {
+          isOverlapping = true;
+        }
+        for (const ast of this.#asteroids) {
+          if (this.#checkCollision(ast, powerUp)) {
+            isOverlapping = true;
+            break;
+          }
+        }
+      } while (isOverlapping);
+      this.#powerups.push(powerUp);
+      this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
+      break;
+    }
+  }
+
+  #collectPowerUps(): void {
+    for (const powerUp of this.#powerups) {
+      if (this.#checkCollision(this.#playerOne, powerUp)) {
+        const projectiles: Projectile[] = this.#playerOne.usePowerUp();
+        powerUp.active = false;
+        this.#P1Projectiles.push(...projectiles);
+        this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
+      }
+      if (this.#checkCollision(this.#playerTwo, powerUp)) {
+        const projectiles: Projectile[] = this.#playerTwo.usePowerUp();
+        powerUp.active = false;
+        this.#P2Projectiles.push(...projectiles);
+        this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
+      }
+    }
   }
 
   #calculateCollisionNormal(
@@ -226,20 +308,23 @@ export class AsteroidGame {
     }
   }
 
+  #destroyInactivePowerUps() {
+    this.#powerups = this.#powerups.filter((p) => p.active);
+  }
   #destroyInactiveProjectiles(): void {
     this.#P1Projectiles = this.#P1Projectiles.filter((p) => p.active);
     this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
   }
   #moveProjectiles(): void {
     if (this.#P1Projectiles.length > 0) {
-      this.#P1Projectiles.forEach((projectile) =>
-        projectile.update(this.#ctx, this.#width, this.#height)
-      );
+      for (const projectile of this.#P1Projectiles) {
+        projectile.update(this.#ctx, this.#width, this.#height);
+      }
     }
     if (this.#P2Projectiles.length > 0) {
-      this.#P2Projectiles.forEach((projectile) =>
-        projectile.update(this.#ctx, this.#width, this.#height)
-      );
+      for (const projectile of this.#P2Projectiles) {
+        projectile.update(this.#ctx, this.#width, this.#height);
+      }
     }
   }
 

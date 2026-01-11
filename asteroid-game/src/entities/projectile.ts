@@ -3,7 +3,6 @@ import { BaseEntity } from "./entity.js";
 DIAGONAL_MODIFIER;
 
 export class Projectile extends BaseEntity {
-  #angle: number;
   active = false;
   constructor(
     x: number,
@@ -16,7 +15,7 @@ export class Projectile extends BaseEntity {
     super(x, y, 8, 15);
     this.vx = vx;
     this.vy = vy;
-    this.#angle = angle;
+    this.angle = angle;
     this.active = true;
 
     const img = new Image(this.width, this.height);
@@ -35,7 +34,7 @@ export class Projectile extends BaseEntity {
   ): void {
     ctx.save();
     ctx.translate(this.x + this.width / 2, this.y + this.width / 2);
-    ctx.rotate(this.#angle);
+    ctx.rotate(this.angle);
     this.drawRelativeImage(ctx);
     // this.drawHitBox(ctx);
     ctx.restore();
