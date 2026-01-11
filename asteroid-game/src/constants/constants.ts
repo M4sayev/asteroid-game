@@ -57,8 +57,8 @@ export const maxObstacleSize = 80;
 export const asteroidCount = 5;
 
 export const powerUpCountMap = {
-  aoe: 2,
-  laser: 3,
+  aoe: 1,
+  shotgun: 2,
 };
 
 export const playerColors: Record<ColorType, string> = {

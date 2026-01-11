@@ -7,11 +7,17 @@ import {
 } from "./constants/constants.js";
 import { Asteroid } from "./entities/asteroid.js";
 import { BaseEntity } from "./entities/entity.js";
-import { AoePowerUp } from "./entities/powerup.js";
+import { PowerUp } from "./entities/powerup.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
 import { currentColorP1, currentColorP2 } from "./menu/menuState.js";
-import type { EntityType, KeyName, KeyState } from "./types/types.js";
+import type {
+  EntityType,
+  KeyName,
+  KeyState,
+  PowerUpType,
+} from "./types/types.js";
+import { getRandomIndex } from "./utils/utils.js";
 
 Ship;
 export let asteroidGameAnimation: number;
@@ -24,17 +30,28 @@ export class AsteroidGame {
   #playerTwo!: Ship;
   #P1Projectiles: Projectile[] = [];
   #P2Projectiles: Projectile[] = [];
+  #playerDestructionAudio?: HTMLAudioElement;
   #asteroids: Asteroid[] = [];
-  #powerups: AoePowerUp[] = [];
+  #asteroidHitAudio?: HTMLAudioElement;
+  #powerups: PowerUp[] = [];
+  #powerUpAudio?: HTMLAudioElement;
+  #powerupsCount: Record<PowerUpType, number> = {
+    aoe: 0,
+    shotgun: 0,
+  };
   #keys: KeyState = defaultKeys;
   #bg?: HTMLImageElement;
 
-  #powerUpCooldown: number = AoePowerUp.aoePowerUpCooldown;
+  #powerUpCooldowns: Record<PowerUpType, number> = {
+    aoe: PowerUp.powerUpCooldownsMap["aoe"],
+    shotgun: PowerUp.powerUpCooldownsMap["shotgun"],
+  };
   constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
     this.#ctx = ctx;
     this.#width = width;
     this.#height = height;
 
+    // background image
     const img = new Image();
 
     img.onload = () => {
@@ -42,6 +59,27 @@ export class AsteroidGame {
     };
 
     img.src = "assets/bg-new.png";
+
+    // power up audio
+    const powerAudio = new Audio();
+
+    powerAudio.oncanplaythrough = () => (this.#powerUpAudio = powerAudio);
+
+    powerAudio.src = "assets/power_ups/power_up_audio.ogg";
+
+    const playerAudio = new Audio();
+
+    playerAudio.oncanplaythrough = () =>
+      (this.#playerDestructionAudio = playerAudio);
+
+    playerAudio.src = "assets/ship/player_destruction.m4a";
+
+    const asteroidHitAudio = new Audio();
+
+    asteroidHitAudio.oncanplaythrough = () =>
+      (this.#asteroidHitAudio = asteroidHitAudio);
+
+    asteroidHitAudio.src = "assets/obstacles/asteroid_hit.m4a";
 
     this.#createPlayers();
 
@@ -75,7 +113,7 @@ export class AsteroidGame {
 
     this.#moveProjectiles();
 
-    this.#updateActivePlayers();
+    this.#updatePlayers();
 
     this.#handleChangePlayerColors();
 
@@ -99,28 +137,34 @@ export class AsteroidGame {
   }
 
   #handlePowerUpCooldown(): void {
-    if (this.#powerUpCooldown > 0) {
-      this.#powerUpCooldown--;
+    if (this.#powerUpCooldowns["aoe"] > 0) {
+      this.#powerUpCooldowns["aoe"]--;
+    }
+    if (this.#powerUpCooldowns["shotgun"] > 0) {
+      this.#powerUpCooldowns["shotgun"]--;
     }
   }
 
   #populatePowerUps(): void {
-    if (this.#powerups.length >= powerUpCountMap["aoe"]) {
-      this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
+    const powerUps = Object.keys(powerUpCountMap) as PowerUpType[];
+    const randomType = powerUps[getRandomIndex(powerUps.length)];
+    if (this.#powerupsCount[randomType] >= powerUpCountMap[randomType]) {
+      this.#powerUpCooldowns[randomType] =
+        PowerUp.powerUpCooldownsMap[randomType];
       return;
     }
 
-    if (this.#powerUpCooldown > 0) return;
+    if (this.#powerUpCooldowns[randomType] > 0) return;
 
-    for (let i = 1; i <= powerUpCountMap["aoe"]; i++) {
+    for (let i = 1; i <= powerUpCountMap[randomType]; i++) {
       let { x, y } = this.#getRandomCoordinates();
-      let powerUp = new AoePowerUp(x, y);
+      let powerUp = new PowerUp(x, y, randomType);
 
       let isOverlapping;
 
       do {
         ({ x, y } = this.#getRandomCoordinates());
-        powerUp = new AoePowerUp(x, y);
+        powerUp = new PowerUp(x, y, randomType);
 
         isOverlapping = false;
 
@@ -137,25 +181,54 @@ export class AsteroidGame {
           }
         }
       } while (isOverlapping);
+      this.#powerUpCooldowns[randomType] =
+        PowerUp.powerUpCooldownsMap[randomType];
+      this.#powerupsCount[randomType]++;
       this.#powerups.push(powerUp);
-      this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
       break;
     }
+  }
+
+  #playPowerUpAudio(): void {
+    if (!this.#powerUpAudio) return;
+    this.#powerUpAudio.volume = 0.5;
+    this.#powerUpAudio.currentTime = 1.7;
+    this.#powerUpAudio.playbackRate = 3;
+    this.#powerUpAudio.play();
+  }
+
+  #playPlayerDestructionAudio(): void {
+    if (!this.#playerDestructionAudio) return;
+    this.#playerDestructionAudio.volume = 0.7;
+    this.#playerDestructionAudio.playbackRate = 1;
+    this.#playerDestructionAudio.play();
   }
 
   #collectPowerUps(): void {
     for (const powerUp of this.#powerups) {
       if (this.#checkCollision(this.#playerOne, powerUp)) {
-        const projectiles: Projectile[] = this.#playerOne.usePowerUp();
+        this.#playPowerUpAudio();
+        if (powerUp.type === "aoe") {
+          const projectiles: Projectile[] = this.#playerOne.useAoEPowerUp();
+          this.#P1Projectiles.push(...projectiles);
+        } else if (powerUp.type === "shotgun") {
+          this.#playerOne.hasPowerupShotgun = true;
+        }
         powerUp.active = false;
-        this.#P1Projectiles.push(...projectiles);
-        this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
+        this.#powerUpCooldowns[powerUp.type] =
+          PowerUp.powerUpCooldownsMap[powerUp.type];
       }
       if (this.#checkCollision(this.#playerTwo, powerUp)) {
-        const projectiles: Projectile[] = this.#playerTwo.usePowerUp();
+        this.#playPowerUpAudio();
+        if (powerUp.type === "aoe") {
+          const projectiles: Projectile[] = this.#playerTwo.useAoEPowerUp();
+          this.#P2Projectiles.push(...projectiles);
+        } else if (powerUp.type === "shotgun") {
+          this.#playerTwo.hasPowerupShotgun = true;
+        }
         powerUp.active = false;
-        this.#P2Projectiles.push(...projectiles);
-        this.#powerUpCooldown = AoePowerUp.aoePowerUpCooldown;
+        this.#powerUpCooldowns[powerUp.type] =
+          PowerUp.powerUpCooldownsMap[powerUp.type];
       }
     }
   }
@@ -209,11 +282,18 @@ export class AsteroidGame {
     }
   }
 
-  #handleProjectileToAsteroidCollision() {
+  #playAsteroidHit(volume: number, speed: number = 1): void {
+    if (!this.#asteroidHitAudio) return;
+    this.#asteroidHitAudio.volume = volume;
+    this.#asteroidHitAudio.playbackRate = speed;
+    this.#asteroidHitAudio.play();
+  }
+  #handleProjectileToAsteroidCollision(): void {
     for (const projectile of this.#P1Projectiles) {
       for (const asteroid of this.#asteroids) {
         if (this.#checkCollision(projectile, asteroid)) {
           projectile.active = false;
+          this.#playAsteroidHit(0.3, 1.5);
         }
       }
     }
@@ -222,6 +302,7 @@ export class AsteroidGame {
   #handlePlayerToAsteroidCollision() {
     for (const asteroid of this.#asteroids) {
       if (this.#checkCollision(asteroid, this.#playerOne)) {
+        this.#playAsteroidHit(0.7, 1);
         const { nx, ny } = this.#calculateCollisionNormal(
           asteroid,
           this.#playerOne
@@ -232,6 +313,7 @@ export class AsteroidGame {
         this.#playerOne.bounce(nx, ny);
       }
       if (this.#checkCollision(asteroid, this.#playerTwo)) {
+        this.#playAsteroidHit(0.7, 1);
         const { nx, ny } = this.#calculateCollisionNormal(
           asteroid,
           this.#playerTwo
@@ -300,16 +382,23 @@ export class AsteroidGame {
     const newProjectileTwo = this.#playerTwo.shoot(this.#keys);
 
     if (newProjectileOne) {
-      this.#P1Projectiles.push(newProjectileOne);
+      if (Array.isArray(newProjectileOne))
+        this.#P1Projectiles.push(...newProjectileOne);
+      else this.#P1Projectiles.push(newProjectileOne);
     }
 
     if (newProjectileTwo) {
-      this.#P2Projectiles.push(newProjectileTwo);
+      if (Array.isArray(newProjectileTwo))
+        this.#P2Projectiles.push(...newProjectileTwo);
+      else this.#P2Projectiles.push(newProjectileTwo);
     }
   }
 
   #destroyInactivePowerUps() {
-    this.#powerups = this.#powerups.filter((p) => p.active);
+    this.#powerups = this.#powerups.filter((p) => {
+      if (!p.active) this.#powerupsCount[p.type]--;
+      return p.active;
+    });
   }
   #destroyInactiveProjectiles(): void {
     this.#P1Projectiles = this.#P1Projectiles.filter((p) => p.active);
@@ -328,13 +417,9 @@ export class AsteroidGame {
     }
   }
 
-  #updateActivePlayers(): void {
-    if (this.#playerOne.active) {
-      this.#playerOne.update(this.#ctx, this.#keys, this.#width, this.#height);
-    }
-    if (this.#playerTwo.active) {
-      this.#playerTwo.update(this.#ctx, this.#keys, this.#width, this.#height);
-    }
+  #updatePlayers(): void {
+    this.#playerOne.update(this.#ctx, this.#keys, this.#width, this.#height);
+    this.#playerTwo.update(this.#ctx, this.#keys, this.#width, this.#height);
   }
 
   #checkCollision(objOne: EntityType, objTwo: EntityType): boolean {
@@ -349,6 +434,7 @@ export class AsteroidGame {
   #destroyInactivePlayes(): void {
     for (const projectile of this.#P1Projectiles) {
       if (this.#checkCollision(projectile, this.#playerTwo)) {
+        this.#playPlayerDestructionAudio();
         projectile.active = false;
         this.#playerTwo.active = false;
         break;
@@ -357,6 +443,7 @@ export class AsteroidGame {
 
     for (const projectile of this.#P2Projectiles) {
       if (this.#checkCollision(projectile, this.#playerOne)) {
+        this.#playPlayerDestructionAudio();
         projectile.active = false;
         this.#playerOne.active = false;
         break;

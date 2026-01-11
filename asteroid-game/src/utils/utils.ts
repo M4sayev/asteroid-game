@@ -29,3 +29,7 @@ export function trapFocus(element: HTMLElement) {
 export function camelToNormal(str: string) {
   return str.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
 }
+
+export function getRandomIndex(len: number) {
+  return Math.floor(Math.random() * len);
+}

@@ -29,6 +29,18 @@ export class Ship extends BaseEntity {
   #cooldown = 0;
   active = true;
 
+  // shotgun powerup
+  hasPowerupShotgun = false;
+
+  public static shotgunTimeoutConst = 500;
+  #shotgunTimeout = Ship.shotgunTimeoutConst;
+
+  #shootAutio?: HTMLAudioElement;
+
+  #explosionScale: number = 0;
+  #explosionScaleCoeff: number = 0.05;
+  #explosionImage?: HTMLImageElement;
+
   // constants
   #shootCooldown = 150;
   #maxVelocity = 10;
@@ -36,6 +48,8 @@ export class Ship extends BaseEntity {
   #rotationSpeed = 0.02;
   #friction = 0.99;
   #aoeProjectileCount = 6;
+  #shotgunSpreadCoeff = 0.2;
+
   constructor({
     width = 45,
     height = 64,
@@ -50,6 +64,18 @@ export class Ship extends BaseEntity {
     this.angle = initialAngle;
     this.#color = color;
 
+    const explosionImg = new Image(64, 64);
+
+    explosionImg.onload = () => (this.#explosionImage = explosionImg);
+
+    explosionImg.src = "assets/ship/ship_explosion.png";
+
+    const audio = new Audio();
+
+    audio.oncanplaythrough = () => (this.#shootAutio = audio);
+
+    audio.src = "assets/projectile/projectile_audio.ogg";
+
     this.#initPlayerImage();
   }
 
@@ -59,9 +85,16 @@ export class Ship extends BaseEntity {
     canvasWidth: number,
     canvasHeight: number
   ): void {
-    this.#rotate(ctx);
-    this.#move(keys);
-    this.#handleCooldown();
+    if (!this.active) {
+      ctx.save();
+      ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+      this.#explode(ctx);
+      ctx.restore();
+    } else {
+      this.#rotate(ctx);
+      this.#move(keys);
+      this.#handleCooldown();
+    }
     this.handleOutOfBounds(canvasWidth, canvasHeight);
   }
   public bounce(nx: number, ny: number): void {
@@ -70,30 +103,66 @@ export class Ship extends BaseEntity {
     this.vy = r.vy;
   }
 
-  public shoot(keys: KeyState): null | Projectile {
-    const { shoot: shootKey } = this.#controls;
-    if (keys[shootKey] && this.#cooldown === 0) {
-      this.#cooldown = this.#shootCooldown;
-      return new Projectile(
-        this.x + this.width / 2,
-        this.y + this.height / 2,
-        -Math.sin(this.angle) * 10 + this.vx,
-        Math.cos(this.angle) * 10 + this.vy,
-        this.angle
-      );
-    }
-    return null;
+  #playShootAudio() {
+    if (!this.#shootAutio) return;
+    this.#shootAutio.volume = 0.7;
+    // can also be
+    this.#shootAutio.currentTime = 4.18;
+    // this.#shootAutio.currentTime = 4.355;
+    this.#shootAutio.play();
   }
 
-  public usePowerUp(): Projectile[] {
+  #singleShoot(): Projectile {
+    this.#cooldown = this.#shootCooldown;
+    this.#playShootAudio();
+    return new Projectile(
+      this.x + this.width / 2,
+      this.y + this.height / 2,
+      -Math.sin(this.angle) * 10 + this.vx,
+      Math.cos(this.angle) * 10 + this.vy,
+      this.angle
+    );
+  }
+
+  public shoot(keys: KeyState): null | Projectile | Projectile[] {
+    const { shoot: shootKey } = this.#controls;
+    if (!(keys[shootKey] && this.#cooldown === 0)) return null;
+
+    if (!this.hasPowerupShotgun) {
+      return this.#singleShoot();
+    } else {
+      return this.#shotGunPowerUp();
+    }
+  }
+
+  public useAoEPowerUp(): Projectile[] {
     const projectiles: Projectile[] = [];
     for (let i = 1; i <= this.#aoeProjectileCount; i++) {
+      this.#playShootAudio();
       const newProjectile = new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
         -Math.sin(this.angle + i) * 10 + this.vx,
         Math.cos(this.angle + i) * 10 + this.vy,
         this.angle + i
+      );
+      projectiles.push(newProjectile);
+    }
+    return projectiles;
+  }
+
+  #shotGunPowerUp(): Projectile[] {
+    const projectiles: Projectile[] = [];
+    for (let i = -1; i <= 1; i += 1) {
+      this.#cooldown = this.#shootCooldown;
+      this.#playShootAudio();
+      const newAngle = this.angle + this.#shotgunSpreadCoeff * i;
+      const newProjectile = new Projectile(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        -Math.sin(newAngle) * 10 + this.vx,
+        Math.cos(newAngle) * 10 + this.vy,
+        newAngle
       );
       projectiles.push(newProjectile);
     }
@@ -121,6 +190,15 @@ export class Ship extends BaseEntity {
 
     this.x = Math.max(0, this.x);
     this.y = Math.max(0, this.y);
+  }
+
+  #explode(ctx: CanvasRenderingContext2D) {
+    // two scale up the explosion more
+    if (this.#explosionScale > 1.5) return;
+    this.#explosionScale += this.#explosionScaleCoeff;
+    ctx.scale(this.#explosionScale, this.#explosionScale);
+    // this.revolve(ctx, 0.4);
+    if (this.#explosionImage) ctx.drawImage(this.#explosionImage, -32, -32);
   }
 
   #initPlayerImage() {
@@ -171,6 +249,17 @@ export class Ship extends BaseEntity {
   #handleCooldown(): void {
     if (this.#cooldown > 0) {
       this.#cooldown--;
+    }
+    this.#handleShotGunTimeout();
+  }
+
+  #handleShotGunTimeout(): void {
+    if (this.#shotgunTimeout < 0) {
+      this.#shotgunTimeout = Ship.shotgunTimeoutConst;
+      this.hasPowerupShotgun = false;
+    }
+    if (this.hasPowerupShotgun) {
+      this.#shotgunTimeout--;
     }
   }
 
