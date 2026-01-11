@@ -1,4 +1,4 @@
-import { ControlsType, KeyName, PlayerNumber } from "../types/types.js";
+import type { ControlsType, KeyName, PlayerNumber } from "../types/types.js";
 
 export function playerSettingsTemplate(
   player: PlayerNumber,

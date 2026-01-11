@@ -1,12 +1,7 @@
 import { setIsPaused, setIsStarted } from "./menuState.js";
 
-let menu: HTMLDivElement;
-let resumeMenu: HTMLDivElement;
-
-export function initMenuControls() {
-  menu = document.getElementById("menu") as HTMLDivElement;
-  resumeMenu = document.getElementById("esc-menu") as HTMLDivElement;
-}
+const menu = document.getElementById("menu") as HTMLDivElement;
+const resumeMenu = document.getElementById("esc-menu") as HTMLDivElement;
 
 export function openMenu() {
   menu.style.display = "flex";

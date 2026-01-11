@@ -3,8 +3,6 @@ import { initMenu } from "./menu/menu.js";
 
 let asteroidGame: AsteroidGame;
 
-initMenu();
-
 export function initGame() {
   cancelAnimationFrame(asteroidGameAnimation);
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -24,5 +22,6 @@ export function initGame() {
 }
 
 window.onload = () => {
+  initMenu();
   initGame();
 };

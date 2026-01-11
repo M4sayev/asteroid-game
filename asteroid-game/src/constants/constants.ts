@@ -1,4 +1,4 @@
-import { AsteroidType, ColorType, ControlsType } from "../types/types.js";
+import type { AsteroidType, ColorType, ControlsType } from "../types/types.js";
 
 export const DIAGONAL_MODIFIER = Math.SQRT1_2;
 

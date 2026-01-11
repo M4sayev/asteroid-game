@@ -3,7 +3,7 @@ import {
   PLAYER_ONE_CONTROLS,
 } from "../constants/constants.js";
 import { Projectile } from "./projectile.js";
-import {
+import type {
   ColorType,
   ControlsType,
   InitialCoordinates,

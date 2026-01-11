@@ -1,5 +1,5 @@
 import { playerColors } from "../constants/constants.js";
-import { ColorType, PlayerNumber } from "../types/types.js";
+import type { ColorType, PlayerNumber } from "../types/types.js";
 import {
   currentColorP1,
   setCurrentColorP1,
