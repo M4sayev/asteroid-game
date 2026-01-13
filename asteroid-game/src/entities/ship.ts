@@ -10,6 +10,7 @@ import type {
   KeyState,
 } from "../types/types.js";
 import { BaseEntity } from "./entity.js";
+import { SoundManager } from "./soundManager.js";
 
 interface ShipConstructorArgs {
   width?: number;
@@ -35,11 +36,11 @@ export class Ship extends BaseEntity {
   public static shotgunTimeoutConst = 500;
   #shotgunTimeout = Ship.shotgunTimeoutConst;
 
-  #shootAutio?: HTMLAudioElement;
-
   #explosionScale: number = 0;
   #explosionScaleCoeff: number = 0.05;
   #explosionImage?: HTMLImageElement;
+
+  #soundService: SoundManager = SoundManager.getInstance();
 
   // constants
   #shootCooldown = 150;
@@ -70,12 +71,6 @@ export class Ship extends BaseEntity {
 
     explosionImg.src = "assets/ship/ship_explosion.png";
 
-    const audio = new Audio();
-
-    audio.oncanplaythrough = () => (this.#shootAutio = audio);
-
-    audio.src = "assets/projectile/projectile_audio.ogg";
-
     this.#initPlayerImage();
   }
 
@@ -103,18 +98,9 @@ export class Ship extends BaseEntity {
     this.vy = r.vy;
   }
 
-  #playShootAudio() {
-    if (!this.#shootAutio) return;
-    this.#shootAutio.volume = 0.7;
-    // can also be
-    this.#shootAutio.currentTime = 4.18;
-    // this.#shootAutio.currentTime = 4.355;
-    this.#shootAutio.play();
-  }
-
   #singleShoot(): Projectile {
     this.#cooldown = this.#shootCooldown;
-    this.#playShootAudio();
+    this.#soundService.playShoot();
     return new Projectile(
       this.x + this.width / 2,
       this.y + this.height / 2,
@@ -138,7 +124,7 @@ export class Ship extends BaseEntity {
   public useAoEPowerUp(): Projectile[] {
     const projectiles: Projectile[] = [];
     for (let i = 1; i <= this.#aoeProjectileCount; i++) {
-      this.#playShootAudio();
+      this.#soundService.playShoot();
       const newProjectile = new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
@@ -155,7 +141,7 @@ export class Ship extends BaseEntity {
     const projectiles: Projectile[] = [];
     for (let i = -1; i <= 1; i += 1) {
       this.#cooldown = this.#shootCooldown;
-      this.#playShootAudio();
+      this.#soundService.playShoot();
       const newAngle = this.angle + this.#shotgunSpreadCoeff * i;
       const newProjectile = new Projectile(
         this.x + this.width / 2,

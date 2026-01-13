@@ -10,6 +10,7 @@ import { BaseEntity } from "./entities/entity.js";
 import { PowerUp } from "./entities/powerup.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
+import { SoundManager } from "./entities/soundManager.js";
 import { currentColorP1, currentColorP2 } from "./menu/menuState.js";
 import type {
   EntityType,
@@ -30,15 +31,14 @@ export class AsteroidGame {
   #playerTwo!: Ship;
   #P1Projectiles: Projectile[] = [];
   #P2Projectiles: Projectile[] = [];
-  #playerDestructionAudio?: HTMLAudioElement;
   #asteroids: Asteroid[] = [];
-  #asteroidHitAudio?: HTMLAudioElement;
   #powerups: PowerUp[] = [];
-  #powerUpAudio?: HTMLAudioElement;
   #powerupsCount: Record<PowerUpType, number> = {
     aoe: 0,
     shotgun: 0,
   };
+
+  #soundService: SoundManager = SoundManager.getInstance();
   #keys: KeyState = defaultKeys;
   #bg?: HTMLImageElement;
 
@@ -60,27 +60,10 @@ export class AsteroidGame {
 
     img.src = "assets/bg-new.png";
 
-    // power up audio
-    const powerAudio = new Audio();
+    this.#init();
+  }
 
-    powerAudio.oncanplaythrough = () => (this.#powerUpAudio = powerAudio);
-
-    powerAudio.src = "assets/power_ups/power_up_audio.ogg";
-
-    const playerAudio = new Audio();
-
-    playerAudio.oncanplaythrough = () =>
-      (this.#playerDestructionAudio = playerAudio);
-
-    playerAudio.src = "assets/ship/player_destruction.m4a";
-
-    const asteroidHitAudio = new Audio();
-
-    asteroidHitAudio.oncanplaythrough = () =>
-      (this.#asteroidHitAudio = asteroidHitAudio);
-
-    asteroidHitAudio.src = "assets/obstacles/asteroid_hit.m4a";
-
+  async #init() {
     this.#createPlayers();
 
     this.#populateAsteroidsArray();
@@ -90,6 +73,7 @@ export class AsteroidGame {
 
     this.loop();
   }
+
   public loop(): void {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
 
@@ -189,25 +173,10 @@ export class AsteroidGame {
     }
   }
 
-  #playPowerUpAudio(): void {
-    if (!this.#powerUpAudio) return;
-    this.#powerUpAudio.volume = 0.5;
-    this.#powerUpAudio.currentTime = 1.7;
-    this.#powerUpAudio.playbackRate = 3;
-    this.#powerUpAudio.play();
-  }
-
-  #playPlayerDestructionAudio(): void {
-    if (!this.#playerDestructionAudio) return;
-    this.#playerDestructionAudio.volume = 0.7;
-    this.#playerDestructionAudio.playbackRate = 1;
-    this.#playerDestructionAudio.play();
-  }
-
   #collectPowerUps(): void {
     for (const powerUp of this.#powerups) {
       if (this.#checkCollision(this.#playerOne, powerUp)) {
-        this.#playPowerUpAudio();
+        this.#soundService.playPowerUp();
         if (powerUp.type === "aoe") {
           const projectiles: Projectile[] = this.#playerOne.useAoEPowerUp();
           this.#P1Projectiles.push(...projectiles);
@@ -219,7 +188,7 @@ export class AsteroidGame {
           PowerUp.powerUpCooldownsMap[powerUp.type];
       }
       if (this.#checkCollision(this.#playerTwo, powerUp)) {
-        this.#playPowerUpAudio();
+        this.#soundService.playPowerUp();
         if (powerUp.type === "aoe") {
           const projectiles: Projectile[] = this.#playerTwo.useAoEPowerUp();
           this.#P2Projectiles.push(...projectiles);
@@ -282,18 +251,12 @@ export class AsteroidGame {
     }
   }
 
-  #playAsteroidHit(volume: number, speed: number = 1): void {
-    if (!this.#asteroidHitAudio) return;
-    this.#asteroidHitAudio.volume = volume;
-    this.#asteroidHitAudio.playbackRate = speed;
-    this.#asteroidHitAudio.play();
-  }
   #handleProjectileToAsteroidCollision(): void {
     for (const projectile of this.#P1Projectiles) {
       for (const asteroid of this.#asteroids) {
         if (this.#checkCollision(projectile, asteroid)) {
           projectile.active = false;
-          this.#playAsteroidHit(0.3, 1.5);
+          this.#soundService.playAsteroidHit(2, 1.5);
         }
       }
     }
@@ -302,7 +265,10 @@ export class AsteroidGame {
   #handlePlayerToAsteroidCollision() {
     for (const asteroid of this.#asteroids) {
       if (this.#checkCollision(asteroid, this.#playerOne)) {
-        this.#playAsteroidHit(0.7, 1);
+        const now = performance.now();
+        if (asteroid.shouldPlayCollision(now)) {
+          this.#soundService.playAsteroidHit(1.4, 1);
+        }
         const { nx, ny } = this.#calculateCollisionNormal(
           asteroid,
           this.#playerOne
@@ -313,7 +279,10 @@ export class AsteroidGame {
         this.#playerOne.bounce(nx, ny);
       }
       if (this.#checkCollision(asteroid, this.#playerTwo)) {
-        this.#playAsteroidHit(0.7, 1);
+        const now = performance.now();
+        if (asteroid.shouldPlayCollision(now)) {
+          this.#soundService.playAsteroidHit(1.4, 1);
+        }
         const { nx, ny } = this.#calculateCollisionNormal(
           asteroid,
           this.#playerTwo
@@ -328,11 +297,18 @@ export class AsteroidGame {
 
   #handleAsteroidToAsteroidCollision() {
     for (let i = 0; i < asteroidCount; i++) {
-      for (let j = 0; j < asteroidCount; j++) {
+      for (let j = i + 1; j < asteroidCount; j++) {
         const asteroid1 = this.#asteroids[i];
         const asteroid2 = this.#asteroids[j];
-        if (j !== i && this.#checkCollision(asteroid1, asteroid2)) {
+        if (this.#checkCollision(asteroid1, asteroid2)) {
           const result = asteroid1.bounceATA(asteroid2);
+          const now = performance.now();
+          if (
+            asteroid1.shouldPlayCollision(now) ||
+            asteroid2.shouldPlayCollision(now)
+          ) {
+            this.#soundService.playAsteroidHit(0.8, 0.5);
+          }
           if (!result) {
             asteroid2.bounce();
           }
@@ -434,7 +410,7 @@ export class AsteroidGame {
   #destroyInactivePlayes(): void {
     for (const projectile of this.#P1Projectiles) {
       if (this.#checkCollision(projectile, this.#playerTwo)) {
-        this.#playPlayerDestructionAudio();
+        this.#soundService.playPlayerDestruction();
         projectile.active = false;
         this.#playerTwo.active = false;
         break;
@@ -443,7 +419,7 @@ export class AsteroidGame {
 
     for (const projectile of this.#P2Projectiles) {
       if (this.#checkCollision(projectile, this.#playerOne)) {
-        this.#playPlayerDestructionAudio();
+        this.#soundService.playPlayerDestruction();
         projectile.active = false;
         this.#playerOne.active = false;
         break;
