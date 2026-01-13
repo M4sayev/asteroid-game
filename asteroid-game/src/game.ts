@@ -30,15 +30,18 @@ export class AsteroidGame {
   #playerTwo!: Ship;
   #P1Projectiles: Projectile[] = [];
   #P2Projectiles: Projectile[] = [];
-  #playerDestructionAudio?: HTMLAudioElement;
   #asteroids: Asteroid[] = [];
-  #asteroidHitAudio?: HTMLAudioElement;
   #powerups: PowerUp[] = [];
-  #powerUpAudio?: HTMLAudioElement;
   #powerupsCount: Record<PowerUpType, number> = {
     aoe: 0,
     shotgun: 0,
   };
+
+  #audioCtx: AudioContext;
+  #shootBuffer?: AudioBuffer;
+  #powerUpBuffer?: AudioBuffer;
+  #asteroidCollisionBuffer?: AudioBuffer;
+  #playerDestructionBuffer?: AudioBuffer;
   #keys: KeyState = defaultKeys;
   #bg?: HTMLImageElement;
 
@@ -60,27 +63,12 @@ export class AsteroidGame {
 
     img.src = "assets/bg-new.png";
 
-    // power up audio
-    const powerAudio = new Audio();
+    this.#audioCtx = new AudioContext();
 
-    powerAudio.oncanplaythrough = () => (this.#powerUpAudio = powerAudio);
+    this.#init();
+  }
 
-    powerAudio.src = "assets/power_ups/power_up_audio.ogg";
-
-    const playerAudio = new Audio();
-
-    playerAudio.oncanplaythrough = () =>
-      (this.#playerDestructionAudio = playerAudio);
-
-    playerAudio.src = "assets/ship/player_destruction.m4a";
-
-    const asteroidHitAudio = new Audio();
-
-    asteroidHitAudio.oncanplaythrough = () =>
-      (this.#asteroidHitAudio = asteroidHitAudio);
-
-    asteroidHitAudio.src = "assets/obstacles/asteroid_hit.m4a";
-
+  async #init() {
     this.#createPlayers();
 
     this.#populateAsteroidsArray();
@@ -88,8 +76,35 @@ export class AsteroidGame {
     window.addEventListener("keydown", (e) => this.#setKey(e, true));
     window.addEventListener("keyup", (e) => this.#setKey(e, false));
 
+    await this.#preloadSounds();
+
+    window.addEventListener("keydown", () => this.#audioCtx.resume(), {
+      once: true,
+    });
+
     this.loop();
   }
+
+  async #preloadSounds() {
+    const loadBuffer = async (url: string) => {
+      const data = await fetch(url).then((r) => r.arrayBuffer());
+      return await this.#audioCtx.decodeAudioData(data);
+    };
+
+    this.#shootBuffer = await loadBuffer(
+      "assets/projectile/projectile_audio.ogg"
+    );
+    this.#powerUpBuffer = await loadBuffer(
+      "assets/power_ups/power_up_audio.ogg"
+    );
+    this.#asteroidCollisionBuffer = await loadBuffer(
+      "assets/obstacles/asteroid_hit.m4a"
+    );
+    this.#playerDestructionBuffer = await loadBuffer(
+      "assets/ship/player_destruction.m4a"
+    );
+  }
+
   public loop(): void {
     this.#ctx.clearRect(0, 0, this.#width, this.#height);
 
@@ -190,18 +205,28 @@ export class AsteroidGame {
   }
 
   #playPowerUpAudio(): void {
-    if (!this.#powerUpAudio) return;
-    this.#powerUpAudio.volume = 0.5;
-    this.#powerUpAudio.currentTime = 1.7;
-    this.#powerUpAudio.playbackRate = 3;
-    this.#powerUpAudio.play();
+    if (!this.#powerUpBuffer) return;
+    const src = this.#audioCtx.createBufferSource();
+    src.playbackRate.value = 2.7;
+    src.buffer = this.#powerUpBuffer;
+
+    const gain = this.#audioCtx.createGain();
+    gain.gain.value = 0.5;
+    src.connect(gain).connect(this.#audioCtx.destination);
+    src.start(0, 1.7);
   }
 
   #playPlayerDestructionAudio(): void {
-    if (!this.#playerDestructionAudio) return;
-    this.#playerDestructionAudio.volume = 0.7;
-    this.#playerDestructionAudio.playbackRate = 1;
-    this.#playerDestructionAudio.play();
+    if (!this.#playerDestructionBuffer) return;
+
+    const src = this.#audioCtx.createBufferSource();
+    src.buffer = this.#playerDestructionBuffer;
+
+    const gain = this.#audioCtx.createGain();
+    gain.gain.value = 0.7;
+
+    src.connect(gain).connect(this.#audioCtx.destination);
+    src.start(0, 0, 1.3);
   }
 
   #collectPowerUps(): void {
@@ -283,17 +308,21 @@ export class AsteroidGame {
   }
 
   #playAsteroidHit(volume: number, speed: number = 1): void {
-    if (!this.#asteroidHitAudio) return;
-    this.#asteroidHitAudio.volume = volume;
-    this.#asteroidHitAudio.playbackRate = speed;
-    this.#asteroidHitAudio.play();
+    if (!this.#asteroidCollisionBuffer) return;
+    const src = this.#audioCtx.createBufferSource();
+    src.buffer = this.#asteroidCollisionBuffer;
+
+    const gain = this.#audioCtx.createGain();
+    gain.gain.value = volume;
+    src.connect(gain).connect(this.#audioCtx.destination);
+    src.start(0, speed);
   }
   #handleProjectileToAsteroidCollision(): void {
     for (const projectile of this.#P1Projectiles) {
       for (const asteroid of this.#asteroids) {
         if (this.#checkCollision(projectile, asteroid)) {
           projectile.active = false;
-          this.#playAsteroidHit(0.3, 1.5);
+          this.#playAsteroidHit(2, 1.5);
         }
       }
     }
@@ -302,7 +331,7 @@ export class AsteroidGame {
   #handlePlayerToAsteroidCollision() {
     for (const asteroid of this.#asteroids) {
       if (this.#checkCollision(asteroid, this.#playerOne)) {
-        this.#playAsteroidHit(0.7, 1);
+        this.#playAsteroidHit(1.4, 1);
         const { nx, ny } = this.#calculateCollisionNormal(
           asteroid,
           this.#playerOne
@@ -313,7 +342,7 @@ export class AsteroidGame {
         this.#playerOne.bounce(nx, ny);
       }
       if (this.#checkCollision(asteroid, this.#playerTwo)) {
-        this.#playAsteroidHit(0.7, 1);
+        this.#playAsteroidHit(1.4, 1);
         const { nx, ny } = this.#calculateCollisionNormal(
           asteroid,
           this.#playerTwo
