@@ -18,7 +18,7 @@ import type {
   KeyState,
   PowerUpType,
 } from "./types/types.js";
-import { getRandomIndex } from "./utils/utils.js";
+import { calculateCollisionNormal, getRandomIndex } from "./utils/utils.js";
 
 Ship;
 export let asteroidGameAnimation: number;
@@ -114,6 +114,19 @@ export class AsteroidGame {
     asteroidGameAnimation = requestAnimationFrame(() => this.loop());
   }
 
+  #createPlayers(): void {
+    this.#playerOne = new Ship({ color: currentColorP1 });
+    this.#playerTwo = new Ship({
+      controls: PLAYER_TWO_CONTROLS,
+      initialCoordinates: {
+        x: this.#width - 45,
+        y: this.#height - 64,
+      },
+      initialAngle: Math.PI,
+      color: currentColorP2,
+    });
+  }
+
   #drawPowerUps(): void {
     for (const powerUp of this.#powerups) {
       if (powerUp.active) powerUp.update(this.#ctx);
@@ -121,11 +134,10 @@ export class AsteroidGame {
   }
 
   #handlePowerUpCooldown(): void {
-    if (this.#powerUpCooldowns["aoe"] > 0) {
-      this.#powerUpCooldowns["aoe"]--;
-    }
-    if (this.#powerUpCooldowns["shotgun"] > 0) {
-      this.#powerUpCooldowns["shotgun"]--;
+    for (const type in this.#powerUpCooldowns) {
+      if (this.#powerUpCooldowns[type as PowerUpType] > 0) {
+        this.#powerUpCooldowns[type as PowerUpType]--;
+      }
     }
   }
 
@@ -173,52 +185,30 @@ export class AsteroidGame {
     }
   }
 
-  #collectPowerUps(): void {
-    for (const powerUp of this.#powerups) {
-      if (this.#checkCollision(this.#playerOne, powerUp)) {
-        this.#soundService.playPowerUp();
-        if (powerUp.type === "aoe") {
-          const projectiles: Projectile[] = this.#playerOne.useAoEPowerUp();
-          this.#P1Projectiles.push(...projectiles);
-        } else if (powerUp.type === "shotgun") {
-          this.#playerOne.hasPowerupShotgun = true;
-        }
-        powerUp.active = false;
-        this.#powerUpCooldowns[powerUp.type] =
-          PowerUp.powerUpCooldownsMap[powerUp.type];
+  #usePowerUpsPerPlayer(
+    player: Ship,
+    powerUp: PowerUp,
+    procetilesArr: Projectile[]
+  ): void {
+    if (this.#checkCollision(player, powerUp)) {
+      this.#soundService.playPowerUp();
+      if (powerUp.type === "aoe") {
+        const projectiles: Projectile[] = player.useAoEPowerUp();
+        procetilesArr.push(...projectiles);
+      } else if (powerUp.type === "shotgun") {
+        player.hasPowerupShotgun = true;
       }
-      if (this.#checkCollision(this.#playerTwo, powerUp)) {
-        this.#soundService.playPowerUp();
-        if (powerUp.type === "aoe") {
-          const projectiles: Projectile[] = this.#playerTwo.useAoEPowerUp();
-          this.#P2Projectiles.push(...projectiles);
-        } else if (powerUp.type === "shotgun") {
-          this.#playerTwo.hasPowerupShotgun = true;
-        }
-        powerUp.active = false;
-        this.#powerUpCooldowns[powerUp.type] =
-          PowerUp.powerUpCooldownsMap[powerUp.type];
-      }
+      powerUp.active = false;
+      this.#powerUpCooldowns[powerUp.type] =
+        PowerUp.powerUpCooldownsMap[powerUp.type];
     }
   }
 
-  #calculateCollisionNormal(
-    entityOne: BaseEntity,
-    entityTwo: BaseEntity
-  ): { nx: number; ny: number } {
-    const { x: ax, y: ay } = entityOne.getCoordinates();
-    const { width: aWidth, height: aHeight } = entityOne.getSize();
-
-    const { x: bx, y: by } = entityTwo.getCoordinates();
-    const { width: bWidth, height: bHeight } = entityTwo.getSize();
-
-    const dx = ax + aWidth / 2 - (bx + bWidth / 2);
-    const dy = ay + aHeight / 2 - (by + bHeight / 2);
-    const dist = Math.hypot(dx, dy) || 1;
-
-    const nx = dx / dist;
-    const ny = dy / dist;
-    return { nx, ny };
+  #collectPowerUps(): void {
+    for (const powerUp of this.#powerups) {
+      this.#usePowerUpsPerPlayer(this.#playerOne, powerUp, this.#P1Projectiles);
+      this.#usePowerUpsPerPlayer(this.#playerTwo, powerUp, this.#P2Projectiles);
+    }
   }
 
   #populateAsteroidsArray(): void {
@@ -262,36 +252,28 @@ export class AsteroidGame {
     }
   }
 
+  #handlePlayerAsteroidCollision(
+    asteroid: Asteroid,
+    player: Ship,
+    currentTimeMs: number
+  ) {
+    if (this.#checkCollision(asteroid, player)) {
+      if (asteroid.shouldPlayCollision(currentTimeMs)) {
+        this.#soundService.playAsteroidHit(1.4, 1);
+      }
+      const { nx, ny } = calculateCollisionNormal(asteroid, player);
+
+      const { vx, vy } = player.getVelocity();
+      asteroid.bouncePTA(vx, vy, nx, ny);
+      player.bounce(nx, ny);
+    }
+  }
+
   #handlePlayerToAsteroidCollision() {
+    const now = performance.now();
     for (const asteroid of this.#asteroids) {
-      if (this.#checkCollision(asteroid, this.#playerOne)) {
-        const now = performance.now();
-        if (asteroid.shouldPlayCollision(now)) {
-          this.#soundService.playAsteroidHit(1.4, 1);
-        }
-        const { nx, ny } = this.#calculateCollisionNormal(
-          asteroid,
-          this.#playerOne
-        );
-
-        const { vx, vy } = this.#playerOne.getVelocity();
-        asteroid.bouncePTA(vx, vy, nx, ny);
-        this.#playerOne.bounce(nx, ny);
-      }
-      if (this.#checkCollision(asteroid, this.#playerTwo)) {
-        const now = performance.now();
-        if (asteroid.shouldPlayCollision(now)) {
-          this.#soundService.playAsteroidHit(1.4, 1);
-        }
-        const { nx, ny } = this.#calculateCollisionNormal(
-          asteroid,
-          this.#playerTwo
-        );
-
-        const { vx, vy } = this.#playerTwo.getVelocity();
-        asteroid.bouncePTA(vx, vy, nx, ny);
-        this.#playerTwo.bounce(nx, ny);
-      }
+      this.#handlePlayerAsteroidCollision(asteroid, this.#playerOne, now);
+      this.#handlePlayerAsteroidCollision(asteroid, this.#playerTwo, now);
     }
   }
 
@@ -315,19 +297,6 @@ export class AsteroidGame {
         }
       }
     }
-  }
-
-  #createPlayers(): void {
-    this.#playerOne = new Ship({ color: currentColorP1 });
-    this.#playerTwo = new Ship({
-      controls: PLAYER_TWO_CONTROLS,
-      initialCoordinates: {
-        x: this.#width - 45,
-        y: this.#height - 64,
-      },
-      initialAngle: Math.PI,
-      color: currentColorP2,
-    });
   }
 
   #drawAsteroids(): void {
@@ -358,15 +327,11 @@ export class AsteroidGame {
     const newProjectileTwo = this.#playerTwo.shoot(this.#keys);
 
     if (newProjectileOne) {
-      if (Array.isArray(newProjectileOne))
-        this.#P1Projectiles.push(...newProjectileOne);
-      else this.#P1Projectiles.push(newProjectileOne);
+      this.#P1Projectiles.push(...newProjectileOne);
     }
 
     if (newProjectileTwo) {
-      if (Array.isArray(newProjectileTwo))
-        this.#P2Projectiles.push(...newProjectileTwo);
-      else this.#P2Projectiles.push(newProjectileTwo);
+      this.#P2Projectiles.push(...newProjectileTwo);
     }
   }
 
@@ -381,15 +346,11 @@ export class AsteroidGame {
     this.#P2Projectiles = this.#P2Projectiles.filter((p) => p.active);
   }
   #moveProjectiles(): void {
-    if (this.#P1Projectiles.length > 0) {
-      for (const projectile of this.#P1Projectiles) {
-        projectile.update(this.#ctx, this.#width, this.#height);
-      }
+    for (const projectile of this.#P1Projectiles) {
+      projectile.update(this.#ctx, this.#width, this.#height);
     }
-    if (this.#P2Projectiles.length > 0) {
-      for (const projectile of this.#P2Projectiles) {
-        projectile.update(this.#ctx, this.#width, this.#height);
-      }
+    for (const projectile of this.#P2Projectiles) {
+      projectile.update(this.#ctx, this.#width, this.#height);
     }
   }
 
@@ -407,24 +368,20 @@ export class AsteroidGame {
     );
   }
 
-  #destroyInactivePlayes(): void {
-    for (const projectile of this.#P1Projectiles) {
-      if (this.#checkCollision(projectile, this.#playerTwo)) {
+  #destroyPlayer(player: Ship, enemyProjectiles: Projectile[]): void {
+    for (const projectile of enemyProjectiles) {
+      if (this.#checkCollision(projectile, player)) {
         this.#soundService.playPlayerDestruction();
         projectile.active = false;
-        this.#playerTwo.active = false;
+        player.active = false;
         break;
       }
     }
+  }
 
-    for (const projectile of this.#P2Projectiles) {
-      if (this.#checkCollision(projectile, this.#playerOne)) {
-        this.#soundService.playPlayerDestruction();
-        projectile.active = false;
-        this.#playerOne.active = false;
-        break;
-      }
-    }
+  #destroyInactivePlayes(): void {
+    this.#destroyPlayer(this.#playerTwo, this.#P1Projectiles);
+    this.#destroyPlayer(this.#playerOne, this.#P2Projectiles);
   }
 
   #handleChangePlayerColors() {
@@ -438,7 +395,7 @@ export class AsteroidGame {
 
   #handlePlayerCollision(): void {
     if (this.#checkCollision(this.#playerOne, this.#playerTwo)) {
-      const { nx, ny } = this.#calculateCollisionNormal(
+      const { nx, ny } = calculateCollisionNormal(
         this.#playerOne,
         this.#playerTwo
       );

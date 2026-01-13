@@ -64,7 +64,7 @@ export class SoundManager {
     if (!this.#powerUpBuffer) return;
 
     const source = this.#audioContext.createBufferSource();
-    source.playbackRate.value = 2.3;
+    source.playbackRate.value = 1.6;
     source.buffer = this.#powerUpBuffer;
 
     const gain = this.#audioContext.createGain();

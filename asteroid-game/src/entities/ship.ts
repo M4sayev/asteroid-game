@@ -43,6 +43,7 @@ export class Ship extends BaseEntity {
   #soundService: SoundManager = SoundManager.getInstance();
 
   // constants
+  #projectileSpeed = 10;
   #shootCooldown = 150;
   #maxVelocity = 10;
   #acceleration = 0.01;
@@ -98,38 +99,39 @@ export class Ship extends BaseEntity {
     this.vy = r.vy;
   }
 
-  #singleShoot(): Projectile {
+  #singleShoot(): Projectile[] {
     this.#cooldown = this.#shootCooldown;
     this.#soundService.playShoot();
-    return new Projectile(
-      this.x + this.width / 2,
-      this.y + this.height / 2,
-      -Math.sin(this.angle) * 10 + this.vx,
-      Math.cos(this.angle) * 10 + this.vy,
-      this.angle
-    );
+    console.log(this.angle);
+    return [
+      new Projectile(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        Math.sin(this.angle) * this.#projectileSpeed + this.vx,
+        Math.cos(this.angle) * this.#projectileSpeed + this.vy,
+        Math.PI + this.angle
+      ),
+    ];
   }
 
-  public shoot(keys: KeyState): null | Projectile | Projectile[] {
+  public shoot(keys: KeyState): null | Projectile[] {
     const { shoot: shootKey } = this.#controls;
     if (!(keys[shootKey] && this.#cooldown === 0)) return null;
 
-    if (!this.hasPowerupShotgun) {
-      return this.#singleShoot();
-    } else {
-      return this.#shotGunPowerUp();
-    }
+    if (!this.hasPowerupShotgun) return this.#singleShoot();
+
+    return this.#shotGunPowerUp();
   }
 
   public useAoEPowerUp(): Projectile[] {
     const projectiles: Projectile[] = [];
+    this.#soundService.playShoot();
     for (let i = 1; i <= this.#aoeProjectileCount; i++) {
-      this.#soundService.playShoot();
       const newProjectile = new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
-        -Math.sin(this.angle + i) * 10 + this.vx,
-        Math.cos(this.angle + i) * 10 + this.vy,
+        -Math.sin(this.angle + i) * this.#projectileSpeed + this.vx,
+        Math.cos(this.angle + i) * this.#projectileSpeed + this.vy,
         this.angle + i
       );
       projectiles.push(newProjectile);
@@ -139,15 +141,15 @@ export class Ship extends BaseEntity {
 
   #shotGunPowerUp(): Projectile[] {
     const projectiles: Projectile[] = [];
+    this.#soundService.playShoot();
     for (let i = -1; i <= 1; i += 1) {
       this.#cooldown = this.#shootCooldown;
-      this.#soundService.playShoot();
       const newAngle = this.angle + this.#shotgunSpreadCoeff * i;
       const newProjectile = new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
-        -Math.sin(newAngle) * 10 + this.vx,
-        Math.cos(newAngle) * 10 + this.vy,
+        -Math.sin(newAngle) * this.#projectileSpeed + this.vx,
+        Math.cos(newAngle) * this.#projectileSpeed + this.vy,
         newAngle
       );
       projectiles.push(newProjectile);
