@@ -2,9 +2,12 @@ import { asteroids } from "../constants/constants.js";
 import { BaseEntity } from "./entity.js";
 
 export class Asteroid extends BaseEntity {
-  #friction: number = 0.99;
   vx = 0;
   vy = 0;
+  #lastCollisionTime: number = 0;
+
+  #friction: number = 0.99;
+  #collisionTimeCooldownMS: number = 4000;
 
   constructor(x: number, y: number) {
     const randomIndex = Math.floor(Math.random() * asteroids.length);
@@ -57,6 +60,14 @@ export class Asteroid extends BaseEntity {
     const restitution = 0.1;
     this.vx = (reflVx + incomingVx) * restitution;
     this.vy = (reflVy + incomingVy) * restitution;
+  }
+
+  public shouldPlayCollision(currentTime: number): boolean {
+    if (currentTime - this.#lastCollisionTime > this.#collisionTimeCooldownMS) {
+      this.#lastCollisionTime = currentTime;
+      return true;
+    }
+    return false;
   }
 
   public bounceATA(asteroid: Asteroid): boolean {
