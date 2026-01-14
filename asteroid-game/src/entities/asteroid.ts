@@ -1,4 +1,5 @@
 import { asteroids } from "../constants/constants.js";
+import { calculateCollisionNormal } from "../utils/utils.js";
 import { BaseEntity } from "./entity.js";
 
 export class Asteroid extends BaseEntity {
@@ -23,7 +24,7 @@ export class Asteroid extends BaseEntity {
     this.angle = randomAngle;
     this.mass = asteroidImg.mass;
 
-    const asset = new Image();
+    const asset = new Image(asteroidImg.diameter, asteroidImg.diameter);
 
     asset.onload = () => (this.img = asset);
 
@@ -57,7 +58,7 @@ export class Asteroid extends BaseEntity {
     const reflVx = relVx - 2 * dot * nx;
     const reflVy = relVy - 2 * dot * ny;
 
-    const restitution = 0.1;
+    const restitution = 0.08;
     this.vx = (reflVx + incomingVx) * restitution;
     this.vy = (reflVy + incomingVy) * restitution;
   }
@@ -70,20 +71,30 @@ export class Asteroid extends BaseEntity {
     return false;
   }
 
-  public bounceATA(asteroid: Asteroid): boolean {
-    const mass = asteroid.getMass();
-    const { vx, vy } = asteroid.getVelocity();
+  public bounceATA(other: Asteroid): boolean {
+    const { nx, ny } = calculateCollisionNormal(this, other);
 
-    if (mass > this.mass) {
-      this.vx = vx;
-      this.vy = vy;
-      return true;
-    } else if (mass == this.mass) {
-      this.stop();
-      asteroid.stop();
-    }
+    const rvx = this.vx - other.vx;
+    const rvy = this.vy - other.vy;
 
-    return false;
+    const velAlongNormal = rvx * nx + rvy * ny;
+
+    if (velAlongNormal > 0) return false;
+
+    const restitution = 1;
+
+    const impulse =
+      (-(1 + restitution) * velAlongNormal) / (1 / this.mass + 1 / other.mass);
+
+    const ix = impulse * nx;
+    const iy = impulse * ny;
+
+    this.vx += ix / this.mass;
+    this.vy += iy / this.mass;
+    other.vx -= ix / other.mass;
+    other.vy -= iy / other.mass;
+
+    return true;
   }
 
   public bounce(): void {
@@ -97,8 +108,8 @@ export class Asteroid extends BaseEntity {
   }
 
   #applyFriction(): void {
-    if (this.vx > 0.05) this.vx *= this.#friction;
-    if (this.vy > 0.05) this.vy *= this.#friction;
+    if (this.vx > 0) this.vx *= this.#friction;
+    if (this.vy > 0) this.vy *= this.#friction;
   }
 
   #move(): void {

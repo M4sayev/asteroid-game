@@ -249,8 +249,10 @@ export class AsteroidGame {
     for (const projectile of this.#P1Projectiles) {
       for (const asteroid of this.#asteroids) {
         if (this.#checkCollision(projectile, asteroid)) {
-          projectile.active = false;
-          this.#soundService.playAsteroidHit(2, 1.5);
+          if (!projectile.exploded) {
+            this.#soundService.playAsteroidHit(2, 1.5);
+          }
+          projectile.exploded = true;
         }
       }
     }
@@ -375,8 +377,10 @@ export class AsteroidGame {
   #destroyPlayer(player: Ship, enemyProjectiles: Projectile[]): void {
     for (const projectile of enemyProjectiles) {
       if (this.#checkCollision(projectile, player)) {
-        this.#soundService.playPlayerDestruction();
-        projectile.active = false;
+        if (!projectile.exploded) {
+          this.#soundService.playPlayerDestruction();
+        }
+        projectile.exploded = true;
         player.active = false;
         break;
       }

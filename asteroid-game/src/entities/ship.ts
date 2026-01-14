@@ -38,6 +38,7 @@ export class Ship extends BaseEntity {
   #shotgunTimeout = Ship.shotgunTimeoutConst;
 
   #explosionScale: number = 0;
+  #explosionMaxScale: number = 2;
   #explosionScaleCoeff: number = 0.05;
   #explosionImage?: HTMLImageElement;
 
@@ -210,7 +211,7 @@ export class Ship extends BaseEntity {
 
   #explode(ctx: CanvasRenderingContext2D) {
     // two scale up the explosion more
-    if (this.#explosionScale > 1.5) return;
+    if (this.#explosionScale > this.#explosionMaxScale) return;
     this.#explosionScale += this.#explosionScaleCoeff;
     ctx.scale(this.#explosionScale, this.#explosionScale);
     // this.revolve(ctx, 0.4);
