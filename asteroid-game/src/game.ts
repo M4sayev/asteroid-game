@@ -2,17 +2,18 @@ import {
   asteroidCount,
   defaultKeys,
   maxObstacleSize,
+  PLAYER_ONE_CONTROLS,
   PLAYER_TWO_CONTROLS,
   powerUpCountMap,
 } from "./constants/constants.js";
 import { Asteroid } from "./entities/asteroid.js";
-import { BaseEntity } from "./entities/entity.js";
 import { PowerUp } from "./entities/powerup.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
 import { SoundManager } from "./entities/soundManager.js";
 import { currentColorP1, currentColorP2 } from "./menu/menuState.js";
 import type {
+  ControlsType,
   EntityType,
   KeyName,
   KeyState,
@@ -46,6 +47,9 @@ export class AsteroidGame {
     aoe: PowerUp.powerUpCooldownsMap["aoe"],
     shotgun: PowerUp.powerUpCooldownsMap["shotgun"],
   };
+
+  #doubleClickThreshold: number = 300;
+
   constructor(ctx: CanvasRenderingContext2D, width: number, height: number) {
     this.#ctx = ctx;
     this.#width = width;
@@ -407,7 +411,53 @@ export class AsteroidGame {
   #setKey(e: KeyboardEvent, state: boolean): void {
     let key = e.key;
     if (e.key.length === 1) key = key.toLowerCase();
-    if (key in this.#keys) this.#keys[key as KeyName] = state;
+    if (key in this.#keys) {
+      this.#setLastPressedKeyByPlayer(
+        key as KeyName,
+        this.#playerOne,
+        PLAYER_ONE_CONTROLS
+      );
+      this.#setLastPressedKeyByPlayer(
+        key as KeyName,
+        this.#playerTwo,
+        PLAYER_TWO_CONTROLS
+      );
+
+      this.#keys[key as KeyName] = state;
+    }
+  }
+
+  #setLastPressedKeyByPlayer(
+    key: KeyName,
+    player: Ship,
+    playerControls: ControlsType
+  ) {
+    if (!Object.values(playerControls).includes(key)) return;
+    if (key == playerControls.shoot) return;
+
+    const now = performance.now();
+
+    const last = player.lastKeyPressTimeMS[key] ?? 0;
+
+    const isDoubleClick =
+      last !== 0 &&
+      !this.#keys[key] &&
+      key === player.lastPressedKey &&
+      now - last < this.#doubleClickThreshold;
+
+    if (isDoubleClick) {
+      player.thrust();
+    }
+
+    player.lastPressedKey = key;
+    player.lastKeyPressTimeMS[key] = now;
+
+    const directionalKeys = Object.values(playerControls).filter(
+      (k) => k !== playerControls.shoot && k !== key
+    );
+    for (const k of directionalKeys) {
+      player.lastKeyPressTimeMS[k] = 0;
+    }
   }
 
   // x, y within bounds and maxObstacleSize pixels off the borders

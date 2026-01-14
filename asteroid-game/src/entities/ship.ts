@@ -7,6 +7,7 @@ import type {
   ColorType,
   ControlsType,
   InitialCoordinates,
+  KeyName,
   KeyState,
 } from "../types/types.js";
 import { BaseEntity } from "./entity.js";
@@ -52,6 +53,14 @@ export class Ship extends BaseEntity {
   #aoeProjectileCount = 6;
   #shotgunSpreadCoeff = 0.2;
 
+  // thrust
+  public static thrustTimeoutConst = 1000;
+  lastPressedKey?: KeyName;
+  lastKeyPressTimeMS = {} as Record<KeyName, number>;
+  #thrustTimeout = 0;
+
+  #thrustCoefficient = 3;
+
   constructor({
     width = 45,
     height = 64,
@@ -89,6 +98,7 @@ export class Ship extends BaseEntity {
     } else {
       this.#rotate(ctx);
       this.#move(keys);
+      this.#handleThrustTimeout();
       this.#handleCooldown();
     }
     this.handleOutOfBounds(canvasWidth, canvasHeight);
@@ -99,15 +109,33 @@ export class Ship extends BaseEntity {
     this.vy = r.vy;
   }
 
+  #handleThrustTimeout() {
+    if (this.#thrustTimeout === 0) return;
+    this.#thrustTimeout -= 1;
+  }
+
+  #canApplyThrust() {
+    if (this.#thrustTimeout === 0) return true;
+    return false;
+  }
+
+  thrust() {
+    if (!this.#canApplyThrust()) return false;
+
+    this.vx -= Math.sin(this.angle) * this.#thrustCoefficient;
+    this.vy += Math.cos(this.angle) * this.#thrustCoefficient;
+
+    this.#thrustTimeout = Ship.thrustTimeoutConst;
+  }
+
   #singleShoot(): Projectile[] {
     this.#cooldown = this.#shootCooldown;
     this.#soundService.playShoot();
-    console.log(this.angle);
     return [
       new Projectile(
         this.x + this.width / 2,
         this.y + this.height / 2,
-        Math.sin(this.angle) * this.#projectileSpeed + this.vx,
+        -Math.sin(this.angle) * this.#projectileSpeed + this.vx,
         Math.cos(this.angle) * this.#projectileSpeed + this.vy,
         Math.PI + this.angle
       ),

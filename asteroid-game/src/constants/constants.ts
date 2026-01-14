@@ -1,8 +1,8 @@
-import type { AsteroidType, ColorType, ControlsType } from "../types/types.js";
+import type { AsteroidType, ColorType, KeyName } from "../types/types.js";
 
 export const DIAGONAL_MODIFIER = Math.SQRT1_2;
 
-export const PLAYER_ONE_CONTROLS: ControlsType = {
+export const PLAYER_ONE_CONTROLS = {
   up: "w",
   left: "a",
   down: "s",
@@ -10,7 +10,7 @@ export const PLAYER_ONE_CONTROLS: ControlsType = {
   shoot: "t",
 } as const;
 
-export const PLAYER_TWO_CONTROLS: ControlsType = {
+export const PLAYER_TWO_CONTROLS = {
   up: "ArrowUp",
   left: "ArrowLeft",
   down: "ArrowDown",
@@ -18,18 +18,14 @@ export const PLAYER_TWO_CONTROLS: ControlsType = {
   shoot: "m",
 } as const;
 
-export const defaultKeys = {
-  w: false,
-  s: false,
-  d: false,
-  a: false,
-  t: false,
-  ArrowUp: false,
-  ArrowDown: false,
-  ArrowLeft: false,
-  ArrowRight: false,
-  m: false,
-};
+export const allKeys = [
+  ...Object.values(PLAYER_ONE_CONTROLS),
+  ...Object.values(PLAYER_TWO_CONTROLS),
+];
+
+export const defaultKeys = {} as Record<KeyName, boolean>;
+
+allKeys.forEach((key: KeyName) => (defaultKeys[key] = false));
 
 export const asteroids: AsteroidType[] = [
   {
