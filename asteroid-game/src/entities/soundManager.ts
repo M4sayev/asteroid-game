@@ -2,6 +2,7 @@ export class SoundManager {
   #audioContext: AudioContext;
   #shootBuffer?: AudioBuffer;
   #powerUpBuffer?: AudioBuffer;
+  #thrustBuffer?: AudioBuffer;
   #asteroidCollisionBuffer?: AudioBuffer;
   #playerDestructionBuffer?: AudioBuffer;
 
@@ -45,8 +46,23 @@ export class SoundManager {
     this.#playerDestructionBuffer = await loadBuffer(
       "assets/ship/player_destruction.m4a"
     );
+
+    this.#thrustBuffer = await loadBuffer("assets/ship/thrust.ogg");
   }
 
+  public playThrust(): void {
+    if (!this.#thrustBuffer) return;
+
+    const source = this.#audioContext.createBufferSource();
+    source.playbackRate.value = 0.9;
+    source.buffer = this.#thrustBuffer;
+
+    const gain = this.#audioContext.createGain();
+    gain.gain.value = 0.4;
+
+    source.connect(gain).connect(this.#audioContext.destination);
+    source.start(0, 1.3, 1.7);
+  }
   public playShoot(): void {
     if (!this.#shootBuffer) return;
 

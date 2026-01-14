@@ -60,7 +60,12 @@ export class Ship extends BaseEntity {
   lastKeyPressTimeMS = {} as Record<KeyName, number>;
   #thrustTimeout = 0;
 
+  #thrustFlameImg?: HTMLImageElement;
   #thrustCoefficient = 3;
+
+  #thrustingTime = 920;
+
+  #thrustFlameAngle = 0;
 
   constructor({
     width = 45,
@@ -81,6 +86,12 @@ export class Ship extends BaseEntity {
     explosionImg.onload = () => (this.#explosionImage = explosionImg);
 
     explosionImg.src = "assets/ship/ship_explosion.png";
+
+    const thrustFlame = new Image(11, 7);
+
+    thrustFlame.onload = () => (this.#thrustFlameImg = thrustFlame);
+
+    thrustFlame.src = "assets/ship/thrust_flame.png";
 
     this.#initPlayerImage();
   }
@@ -120,13 +131,15 @@ export class Ship extends BaseEntity {
     return false;
   }
 
-  thrust() {
+  thrust(): boolean {
     if (!this.#canApplyThrust()) return false;
 
+    this.#soundService.playThrust();
     this.vx -= Math.sin(this.angle) * this.#thrustCoefficient;
     this.vy += Math.cos(this.angle) * this.#thrustCoefficient;
 
     this.#thrustTimeout = Ship.thrustTimeoutConst;
+    return true;
   }
 
   #singleShoot(): Projectile[] {
@@ -280,6 +293,29 @@ export class Ship extends BaseEntity {
     }
   }
 
+  #animateFlame(ctx: CanvasRenderingContext2D) {
+    this.#thrustFlameAngle += 0.1;
+    const scaleCoeff = Math.abs(Math.sin(this.#thrustFlameAngle));
+    ctx.scale(1, scaleCoeff);
+  }
+
+  #drawThrustFlames(ctx: CanvasRenderingContext2D) {
+    if (this.#thrustTimeout > this.#thrustingTime && this.#thrustFlameImg) {
+      ctx.fillStyle = "orange";
+      ctx.lineWidth = 3;
+
+      ctx.save();
+
+      ctx.translate(0, -this.height / 2 - 5);
+      this.#animateFlame(ctx);
+
+      ctx.drawImage(this.#thrustFlameImg, this.width / 2 - 15, 0);
+      ctx.drawImage(this.#thrustFlameImg, -15, 0);
+
+      ctx.restore();
+    }
+  }
+
   #rotate(ctx: CanvasRenderingContext2D) {
     if (!this.img) return;
     ctx.save();
@@ -287,8 +323,10 @@ export class Ship extends BaseEntity {
     ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
 
     ctx.rotate(this.angle);
+
     this.drawRelativeImage(ctx);
 
+    this.#drawThrustFlames(ctx);
     // this.drawHitBox(ctx);
 
     ctx.restore();

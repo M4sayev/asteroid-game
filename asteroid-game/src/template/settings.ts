@@ -6,8 +6,8 @@ export function playerSettingsTemplate(
   instructions: string
 ): string {
   return `
-    <article>
-        <h3 style="text-align: center">Player ${player}</h3>
+    <article class="player-setting-article">
+        <h3 style="display: inline;" class="std-heading">Player ${player}</h3>
         <div class="settings-player-section">
             <div aria-hidden="true" class="setting-player-keys">
             <div class="motion-keys">
@@ -17,6 +17,7 @@ export function playerSettingsTemplate(
             ${instructions}
             </dl>
         </div>
+        <p class="thrust-message">double click in one direction to thrust</p>
     </article>
     `;
 }
