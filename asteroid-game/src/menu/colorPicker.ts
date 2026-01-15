@@ -1,4 +1,5 @@
 import { playerColors } from "../constants/constants.js";
+import { SoundManager } from "../entities/soundManager.js";
 import type { ColorType, PlayerNumber } from "../types/types.js";
 import {
   currentColorP1,
@@ -8,6 +9,8 @@ import {
 
 let colorPickerPlayerOne: HTMLDivElement;
 let colorPickerPlayerTwo: HTMLDivElement;
+
+const soundService = SoundManager.getInstance();
 
 export function initColorPickers(
   imgP1: HTMLImageElement,
@@ -25,6 +28,7 @@ export function initColorPickers(
   colorPickerPlayerOne.addEventListener("click", (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (target.classList.contains("color-btn")) {
+      soundService.playSelectMenuItem();
       const color = target.dataset.color as ColorType;
       setCurrentColorP1(color);
       populateColorBtns(colorPickerPlayerOne, "one", color);
@@ -37,6 +41,7 @@ export function initColorPickers(
   colorPickerPlayerTwo.addEventListener("click", (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (target.classList.contains("color-btn")) {
+      soundService.playSelectMenuItem();
       const color = target.dataset.color as ColorType;
       setCurrentColorP2(color);
 

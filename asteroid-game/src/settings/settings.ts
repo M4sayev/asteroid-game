@@ -1,4 +1,4 @@
-import { setIsSettingsOpen } from "../menu/menuState.js";
+import { closeSettings } from "../menu/menu.js";
 import { createPlayerSettingSection } from "./createPlayerSettings.js";
 
 export function initSettings() {
@@ -22,9 +22,4 @@ export function initSettings() {
   const keyboardSettings = document.getElementById("keyboardSettings");
   if (keyboardSettings)
     keyboardSettings.innerHTML = createPlayerSettingSection();
-}
-
-function closeSettings(menu: HTMLDivElement) {
-  menu.style.display = "none";
-  setIsSettingsOpen(false);
 }

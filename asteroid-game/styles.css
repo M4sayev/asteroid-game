@@ -61,8 +61,13 @@ body {
   color: white;
 }
 
-#menu {
+.play-menu {
   display: flex;
+  background-color: rgba(0, 0, 0, 0.95);
+}
+
+#menu {
+  display: none;
 }
 
 .std-heading {
@@ -267,6 +272,10 @@ body {
 
 #esc-menu {
   display: none;
+}
+
+#playBtn {
+  background-color: #4bb524;
 }
 
 @media screen and (min-width: 720px) {

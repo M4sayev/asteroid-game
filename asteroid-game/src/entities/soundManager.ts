@@ -5,6 +5,8 @@ export class SoundManager {
   #thrustBuffer?: AudioBuffer;
   #asteroidCollisionBuffer?: AudioBuffer;
   #playerDestructionBuffer?: AudioBuffer;
+  #bgOstBuffer?: AudioBuffer;
+  #selectBuffer?: AudioBuffer;
 
   static #instance: SoundManager;
 
@@ -47,7 +49,24 @@ export class SoundManager {
       "assets/ship/player_destruction.m4a"
     );
 
+    this.#bgOstBuffer = await loadBuffer("assets/bg_song_2.mp3");
+
     this.#thrustBuffer = await loadBuffer("assets/ship/thrust.ogg");
+
+    this.#selectBuffer = await loadBuffer("assets/pixel_select_menu_item.mp3");
+  }
+
+  public playSelectMenuItem(): void {
+    if (!this.#selectBuffer) return;
+
+    const source = this.#audioContext.createBufferSource();
+    source.buffer = this.#selectBuffer;
+
+    const gain = this.#audioContext.createGain();
+    gain.gain.value = 0.5;
+
+    source.connect(gain).connect(this.#audioContext.destination);
+    source.start();
   }
 
   public playThrust(): void {
@@ -76,6 +95,18 @@ export class SoundManager {
     source.start(0, 4.18);
   }
 
+  public playBgMusic(): void {
+    if (!this.#bgOstBuffer) return;
+    // freesound community
+    const source = this.#audioContext.createBufferSource();
+    source.loop = true;
+    source.buffer = this.#bgOstBuffer;
+
+    const gain = this.#audioContext.createGain();
+    gain.gain.value = 0.2;
+    source.connect(gain).connect(this.#audioContext.destination);
+    source.start();
+  }
   public playPowerUp(): void {
     if (!this.#powerUpBuffer) return;
 

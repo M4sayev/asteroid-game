@@ -6,16 +6,21 @@ import {
   closeResumeMenu,
   openMenu,
   openResumeMenu,
+  startGame,
 } from "./menuControls.js";
 import { isPaused, isStarted, setIsSettingsOpen } from "./menuState.js";
 import { initSettings } from "../settings/settings.js";
 import { trapFocus } from "../utils/utils.js";
+import { SoundManager } from "../entities/soundManager.js";
+
+const soundeService = SoundManager.getInstance();
 
 export function initMenu() {
   const resumeBtn = document.getElementById("resumeBtn") as HTMLButtonElement;
   const restartBtn = document.getElementById("restartBtn") as HTMLButtonElement;
 
   const startButton = document.getElementById("startBtn") as HTMLButtonElement;
+  const playBtn = document.getElementById("playBtn") as HTMLButtonElement;
 
   // attach event listener to settings
   const settingsButton = document.getElementById(
@@ -26,8 +31,11 @@ export function initMenu() {
     ".settings-menu"
   ) as HTMLDivElement;
 
+  playBtn.addEventListener("click", startGame);
+
   settingsButton.addEventListener("click", () => {
     settingsMenu.style.display = "block";
+    soundeService.playSelectMenuItem();
     setIsSettingsOpen(true);
     trapFocus(settingsMenu);
   });
@@ -50,6 +58,7 @@ export function initMenu() {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
+  if (!isStarted && event.key === "Tab") soundeService.playSelectMenuItem();
   if (event.key === "Escape" && isStarted) {
     isPaused ? closeResumeMenu() : openResumeMenu();
   }
@@ -67,4 +76,10 @@ function restartGame() {
   closeResumeMenu();
   openMenu();
   initGame();
+}
+
+export function closeSettings(menu: HTMLDivElement) {
+  soundeService.playSelectMenuItem();
+  menu.style.display = "none";
+  setIsSettingsOpen(false);
 }
