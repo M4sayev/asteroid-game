@@ -50,7 +50,7 @@ export class AsteroidGame {
   };
 
   #resetTimeoutID: ReturnType<typeof setTimeout> = 0;
-  #gameResetTimeoutMS: number = 2000;
+  #gameResetTimeoutMS: number = 3000;
 
   #soundService: SoundManager = SoundManager.getInstance();
   #keys: KeyState = defaultKeys;

@@ -7,7 +7,7 @@ import {
   openMainMenu,
   startGame,
 } from "./menuControls.js";
-import { gameState, setIsSettingsOpen } from "./menuState.js";
+import { gameState, setIsSettingsOpen, setScore } from "./menuState.js";
 import { initSettings } from "../settings/settings.js";
 import { trapFocus } from "../utils/utils.js";
 import { SoundManager } from "../entities/soundManager.js";
@@ -79,6 +79,9 @@ function handleButtonClick() {
 function restartGame() {
   openMainMenu();
   initGame();
+  // reset to zero
+  setScore("one", () => 0);
+  setScore("two", () => 0);
 }
 
 export function closeSettings(menu: HTMLDivElement) {

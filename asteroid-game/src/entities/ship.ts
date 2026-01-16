@@ -230,6 +230,8 @@ export class Ship extends BaseEntity {
   public reset(x: number, y: number, angle: number) {
     this.x = x;
     this.y = y;
+    this.vx = 0;
+    this.vy = 0;
     this.angle = angle;
     this.active = true;
     this.#explosionScale = 0;
