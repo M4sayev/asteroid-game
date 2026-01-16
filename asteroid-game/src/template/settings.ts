@@ -7,7 +7,7 @@ export function playerSettingsTemplate(
 ): string {
   return `
     <article class="player-setting-article">
-        <h3 style="display: inline;" class="std-heading">Player ${player}</h3>
+        <h3 style="display: inline;" class="std-heading player-${player}-clr">Player ${player}</h3>
         <div class="settings-player-section">
             <div aria-hidden="true" class="setting-player-keys">
             <div class="motion-keys">

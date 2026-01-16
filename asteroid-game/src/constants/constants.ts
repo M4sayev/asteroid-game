@@ -54,7 +54,7 @@ export const asteroidCount = 5;
 
 export const powerUpCountMap = {
   aoe: 1,
-  shotgun: 2,
+  shotgun: 1,
 };
 
 export const playerColors: Record<ColorType, string> = {

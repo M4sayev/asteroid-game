@@ -3,12 +3,11 @@ import { initGame } from "../main.js";
 import { initColorPickers } from "./colorPicker.js";
 import {
   closeMenu,
-  closeResumeMenu,
-  openMenu,
-  openResumeMenu,
+  keyHandlers,
+  openMainMenu,
   startGame,
 } from "./menuControls.js";
-import { isPaused, isStarted, setIsSettingsOpen } from "./menuState.js";
+import { gameState, setIsSettingsOpen, setScore } from "./menuState.js";
 import { initSettings } from "../settings/settings.js";
 import { trapFocus } from "../utils/utils.js";
 import { SoundManager } from "../entities/soundManager.js";
@@ -48,34 +47,41 @@ export function initMenu() {
 
   startButton.addEventListener("click", handleButtonClick);
 
-  resumeBtn.addEventListener("click", closeResumeMenu);
+  resumeBtn.addEventListener("click", closeMenu);
 
   restartBtn.addEventListener("click", restartGame);
 
   window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("keyup", handleKeyUp);
 
   initSettings();
 }
+const shouldBlockMoveKeys = (key: string) => {
+  return gameState !== "PLAYING" && key in defaultKeys;
+};
+
+function handleKeyUp(event: KeyboardEvent) {
+  if (event.key === "Tab") closeMenu();
+}
 
 function handleKeyDown(event: KeyboardEvent) {
-  if (!isStarted && event.key === "Tab") soundeService.playSelectMenuItem();
-  if (event.key === "Escape" && isStarted) {
-    isPaused ? closeResumeMenu() : openResumeMenu();
-  }
-  if ((!isStarted || isPaused) && event.key in defaultKeys) {
+  if (shouldBlockMoveKeys(event.key)) {
     event.stopImmediatePropagation();
   }
+
+  keyHandlers[event.key]?.(event);
 }
 
 function handleButtonClick() {
   closeMenu();
-  closeResumeMenu();
 }
 
 function restartGame() {
-  closeResumeMenu();
-  openMenu();
+  openMainMenu();
   initGame();
+  // reset to zero
+  setScore("one", () => 0);
+  setScore("two", () => 0);
 }
 
 export function closeSettings(menu: HTMLDivElement) {

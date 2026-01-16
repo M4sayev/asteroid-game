@@ -19,7 +19,7 @@
   </head>
   <body>
     <!-- play menu -->
-    <div class="play-menu menu" id="playMenu">
+    <section class="play-menu menu" id="playMenu">
       <button id="playBtn" class="game-button" aria-label="Play the game">
         <span class="border-span left"></span>
         <span class="border-span right"></span>
@@ -27,10 +27,20 @@
         <span class="border-span top"></span>
         <span class="border-span bottom"></span>
       </button>
-    </div>
+    </section>
+    <!-- score menu -->
+    <section class="menu" id="scoreMenu">
+      <p class="menu-text" style="flex-direction: row">
+        <span id="playerOneScore" class="score player-one-clr"> 0 </span>
+        <span class="score score-colon">-</span>
+        <span id="playerTwoScore" class="score player-two player-two-clr">
+          0
+        </span>
+      </p>
+    </section>
     <!-- resume menu -->
-    <div id="esc-menu" class="menu">
-      <section class="menu-text">
+    <section id="esc-menu" class="menu">
+      <div class="menu-text">
         <h1 class="std-heading">Asteroid Shooter</h1>
 
         <button
@@ -47,12 +57,12 @@
           <span class="border-span top"></span>
           <span class="border-span bottom"></span>
         </button>
-      </section>
-    </div>
+      </div>
+    </section>
 
     <!-- main menu -->
 
-    <div id="menu" class="menu">
+    <section id="menu" class="menu">
       <div class="settings-menu" role="dialog" aria-modal="true">
         <div class="settings-menu-contents">
           <button class="close-btn" aria-label="close the setting menu">
@@ -71,7 +81,7 @@
         <span class="border-span bottom"></span>
       </div>
       <!-- text area -->
-      <section class="menu-text">
+      <article class="menu-text">
         <h1 class="std-heading">Asteroid Shooter</h1>
         <button
           id="settingsBtn"
@@ -87,7 +97,7 @@
           <span class="border-span top"></span>
           <span class="border-span bottom"></span>
         </button>
-      </section>
+      </article>
       <!-- player controls  -->
       <div class="player-controls">
         <!-- first player controls -->
@@ -132,7 +142,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
     <canvas id="canvas"></canvas>
     <script src="src/main.js" type="module"></script>
   </body>

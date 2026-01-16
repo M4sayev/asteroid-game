@@ -35,3 +35,5 @@ export type AsteroidType = {
 export type PlayerNumber = "one" | "two";
 
 export type PowerUpType = keyof typeof powerUpCountMap;
+
+export type GameStateType = "PLAYING" | "READY" | "MAIN" | "PAUSED" | "SCORE";

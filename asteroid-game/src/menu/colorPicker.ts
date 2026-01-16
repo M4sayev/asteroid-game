@@ -3,12 +3,22 @@ import { SoundManager } from "../entities/soundManager.js";
 import type { ColorType, PlayerNumber } from "../types/types.js";
 import {
   currentColorP1,
-  setCurrentColorP1,
-  setCurrentColorP2,
+  currentColorP2,
+  setCurrentPlayerColor,
 } from "./menuState.js";
 
-let colorPickerPlayerOne: HTMLDivElement;
-let colorPickerPlayerTwo: HTMLDivElement;
+const colorPickerPlayerOne = document.getElementById(
+  "colorPickerPlayerOne"
+) as HTMLDivElement;
+
+const colorPickerPlayerTwo = document.getElementById(
+  "colorPickerPlayerTwo"
+) as HTMLDivElement;
+
+const playerColorPickerMap: Record<PlayerNumber, HTMLDivElement> = {
+  one: colorPickerPlayerOne,
+  two: colorPickerPlayerTwo,
+};
 
 const soundService = SoundManager.getInstance();
 
@@ -16,41 +26,34 @@ export function initColorPickers(
   imgP1: HTMLImageElement,
   imgP2: HTMLImageElement
 ) {
-  colorPickerPlayerOne = document.getElementById(
-    "colorPickerPlayerOne"
-  ) as HTMLDivElement;
-
-  colorPickerPlayerTwo = document.getElementById(
-    "colorPickerPlayerTwo"
-  ) as HTMLDivElement;
-
   populateColorBtns(colorPickerPlayerOne, "one", currentColorP1);
   colorPickerPlayerOne.addEventListener("click", (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (target.classList.contains("color-btn")) {
-      soundService.playSelectMenuItem();
-      const color = target.dataset.color as ColorType;
-      setCurrentColorP1(color);
-      populateColorBtns(colorPickerPlayerOne, "one", color);
-      imgP1.src = `assets/ship/ship_${color}.png`;
-      imgP1.setAttribute("alt", `${color} ship`);
-    }
+    handleColorSelect(imgP1, "one", event);
   });
 
-  populateColorBtns(colorPickerPlayerTwo, "two", currentColorP1);
+  populateColorBtns(colorPickerPlayerTwo, "two", currentColorP2);
   colorPickerPlayerTwo.addEventListener("click", (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (target.classList.contains("color-btn")) {
-      soundService.playSelectMenuItem();
-      const color = target.dataset.color as ColorType;
-      setCurrentColorP2(color);
-
-      populateColorBtns(colorPickerPlayerTwo, "two", color);
-
-      imgP2.src = `assets/ship/ship_${color}.png`;
-      imgP2.setAttribute("alt", `${color} ship`);
-    }
+    handleColorSelect(imgP2, "two", event);
   });
+}
+
+function handleColorSelect(
+  img: HTMLImageElement,
+  player: PlayerNumber,
+  event: MouseEvent
+) {
+  const target = event.target as HTMLElement;
+  if (target.classList.contains("color-btn")) {
+    soundService.playSelectMenuItem();
+    const color = target.dataset.color as ColorType;
+    setCurrentPlayerColor(color, player);
+
+    const colorPicker = playerColorPickerMap[player];
+    populateColorBtns(colorPicker, player, color);
+
+    img.src = `assets/ship/ship_${color}.png`;
+    img.setAttribute("alt", `${color} ship`);
+  }
 }
 
 function populateColorBtns(
