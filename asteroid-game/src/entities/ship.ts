@@ -12,6 +12,7 @@ import type {
 } from "../types/types.js";
 import { BaseEntity } from "./entity.js";
 import { SoundManager } from "./soundManager.js";
+import { gameState, isPaused, isStarted } from "../menu/menuState.js";
 
 interface ShipConstructorArgs {
   width?: number;
@@ -132,7 +133,9 @@ export class Ship extends BaseEntity {
   }
 
   thrust(): boolean {
-    if (!this.#canApplyThrust()) return false;
+    // to prevent thrusting in the main menu
+    if (gameState !== "PLAYING") return false;
+    if (!this.#canApplyThrust() || !this.active) return false;
 
     this.#soundService.playThrust();
     this.vx -= Math.sin(this.angle) * this.#thrustCoefficient;
@@ -157,6 +160,8 @@ export class Ship extends BaseEntity {
   }
 
   public shoot(keys: KeyState): null | Projectile[] {
+    if (!this.active || gameState !== "PLAYING") return null;
+
     const { shoot: shootKey } = this.#controls;
     if (!(keys[shootKey] && this.#cooldown === 0)) return null;
 
@@ -220,6 +225,14 @@ export class Ship extends BaseEntity {
 
     this.x = Math.max(0, this.x);
     this.y = Math.max(0, this.y);
+  }
+
+  public reset(x: number, y: number, angle: number) {
+    this.x = x;
+    this.y = y;
+    this.angle = angle;
+    this.active = true;
+    this.#explosionScale = 0;
   }
 
   #explode(ctx: CanvasRenderingContext2D) {

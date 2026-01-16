@@ -11,12 +11,18 @@ import { PowerUp } from "./entities/powerup.js";
 import { Projectile } from "./entities/projectile.js";
 import { Ship } from "./entities/ship.js";
 import { SoundManager } from "./entities/soundManager.js";
-import { currentColorP1, currentColorP2 } from "./menu/menuState.js";
+import {
+  currentColorP1,
+  currentColorP2,
+  playerOneScore,
+  setScore,
+} from "./menu/menuState.js";
 import type {
   ControlsType,
   EntityType,
   KeyName,
   KeyState,
+  PlayerNumber,
   PowerUpType,
 } from "./types/types.js";
 import {
@@ -42,6 +48,9 @@ export class AsteroidGame {
     aoe: 0,
     shotgun: 0,
   };
+
+  #resetTimeoutID: ReturnType<typeof setTimeout> = 0;
+  #gameResetTimeoutMS: number = 2000;
 
   #soundService: SoundManager = SoundManager.getInstance();
   #keys: KeyState = defaultKeys;
@@ -203,6 +212,7 @@ export class AsteroidGame {
     powerUp: PowerUp,
     procetilesArr: Projectile[]
   ): void {
+    if (!player.active) return;
     if (this.#checkCollision(player, powerUp)) {
       this.#soundService.playPowerUp();
       if (powerUp.type === "aoe") {
@@ -226,12 +236,12 @@ export class AsteroidGame {
 
   #populateAsteroidsArray(): void {
     for (let i = 1; i <= asteroidCount; i++) {
-      let { x, y } = this.#getRandomCoordinates();
-      let asteroid = new Asteroid(x, y);
+      let asteroid: Asteroid;
 
       let isOverlapping;
+      let attempts = 0;
       do {
-        ({ x, y } = this.#getRandomCoordinates());
+        const { x, y } = this.#getRandomCoordinates();
         asteroid = new Asteroid(x, y);
 
         isOverlapping = false;
@@ -249,6 +259,8 @@ export class AsteroidGame {
             break;
           }
         }
+
+        if (attempts > 100) break;
       } while (isOverlapping);
       this.#asteroids.push(asteroid);
     }
@@ -383,22 +395,57 @@ export class AsteroidGame {
     );
   }
 
-  #destroyPlayer(player: Ship, enemyProjectiles: Projectile[]): void {
+  #destroyPlayer(
+    player: Ship,
+    enemyProjectiles: Projectile[],
+    playerName: PlayerNumber
+  ): void {
+    if (!player.active) return;
+
     for (const projectile of enemyProjectiles) {
       if (this.#checkCollision(projectile, player)) {
         if (!projectile.exploded) {
           this.#soundService.playPlayerDestruction();
         }
+        setScore(playerName, (prev) => prev + 1);
+        console.log(playerOneScore);
+
         projectile.exploded = true;
         player.active = false;
+
+        this.#resetGame();
+
         break;
       }
     }
   }
 
+  #resetGame(): void {
+    clearTimeout(this.#resetTimeoutID);
+
+    this.#resetTimeoutID = setTimeout(() => {
+      const { x: x1, y: y1 } = this.#getRandomCoordinates();
+
+      this.#P1Projectiles = [];
+      this.#P2Projectiles = [];
+
+      this.#asteroids = [];
+
+      this.#playerOne.reset(x1, y1, getRandomAngle());
+      this.#playerTwo.reset(
+        this.#width - x1,
+        this.#height - y1,
+        getRandomAngle()
+      );
+
+      this.#populateAsteroidsArray();
+    }, this.#gameResetTimeoutMS);
+  }
+
   #destroyInactivePlayes(): void {
-    this.#destroyPlayer(this.#playerTwo, this.#P1Projectiles);
-    this.#destroyPlayer(this.#playerOne, this.#P2Projectiles);
+    // 3rd argument is the player to update the score of
+    this.#destroyPlayer(this.#playerTwo, this.#P1Projectiles, "one");
+    this.#destroyPlayer(this.#playerOne, this.#P2Projectiles, "two");
   }
 
   #handleChangePlayerColors() {
@@ -411,6 +458,7 @@ export class AsteroidGame {
   }
 
   #handlePlayerCollision(): void {
+    if (!this.#playerOne.active || !this.#playerTwo.active) return;
     if (this.#checkCollision(this.#playerOne, this.#playerTwo)) {
       const { nx, ny } = calculateCollisionNormal(
         this.#playerOne,
