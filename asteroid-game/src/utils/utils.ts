@@ -54,3 +54,7 @@ export function calculateCollisionNormal(
   const ny = dy / dist;
   return { nx, ny };
 }
+
+export function getRandomAngle(): number {
+  return Math.min(Math.PI, Math.max(-Math.PI, Math.random() * 8 - 4));
+}

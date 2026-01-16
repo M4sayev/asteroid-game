@@ -19,7 +19,11 @@ import type {
   KeyState,
   PowerUpType,
 } from "./types/types.js";
-import { calculateCollisionNormal, getRandomIndex } from "./utils/utils.js";
+import {
+  calculateCollisionNormal,
+  getRandomAngle,
+  getRandomIndex,
+} from "./utils/utils.js";
 
 Ship;
 export let asteroidGameAnimation: number;
@@ -119,14 +123,19 @@ export class AsteroidGame {
   }
 
   #createPlayers(): void {
-    this.#playerOne = new Ship({ color: currentColorP1 });
+    const { x: x1, y: y1 } = this.#getRandomCoordinates();
+    this.#playerOne = new Ship({
+      color: currentColorP1,
+      initialCoordinates: { x: x1, y: y1 },
+      initialAngle: getRandomAngle(),
+    });
     this.#playerTwo = new Ship({
       controls: PLAYER_TWO_CONTROLS,
       initialCoordinates: {
-        x: this.#width - 45,
-        y: this.#height - 64,
+        x: this.#width - x1,
+        y: this.#height - y1,
       },
-      initialAngle: Math.PI,
+      initialAngle: getRandomAngle(),
       color: currentColorP2,
     });
   }
