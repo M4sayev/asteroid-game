@@ -12,7 +12,7 @@ import type {
 } from "../types/types.js";
 import { BaseEntity } from "./entity.js";
 import { SoundManager } from "./soundManager.js";
-import { gameState, isPaused, isStarted } from "../menu/menuState.js";
+import { gameState } from "../menu/menuState.js";
 
 interface ShipConstructorArgs {
   width?: number;
@@ -101,7 +101,7 @@ export class Ship extends BaseEntity {
     ctx: CanvasRenderingContext2D,
     keys: KeyState,
     canvasWidth: number,
-    canvasHeight: number
+    canvasHeight: number,
   ): void {
     if (!this.active) {
       ctx.save();
@@ -154,7 +154,7 @@ export class Ship extends BaseEntity {
         this.y + this.height / 2,
         -Math.sin(this.angle) * this.#projectileSpeed + this.vx,
         Math.cos(this.angle) * this.#projectileSpeed + this.vy,
-        Math.PI + this.angle
+        Math.PI + this.angle,
       ),
     ];
   }
@@ -179,7 +179,7 @@ export class Ship extends BaseEntity {
         this.y + this.height / 2,
         -Math.sin(this.angle + i) * this.#projectileSpeed + this.vx,
         Math.cos(this.angle + i) * this.#projectileSpeed + this.vy,
-        this.angle + i
+        this.angle + i,
       );
       projectiles.push(newProjectile);
     }
@@ -197,7 +197,7 @@ export class Ship extends BaseEntity {
         this.y + this.height / 2,
         -Math.sin(newAngle) * this.#projectileSpeed + this.vx,
         Math.cos(newAngle) * this.#projectileSpeed + this.vy,
-        newAngle
+        newAngle,
       );
       projectiles.push(newProjectile);
     }
@@ -232,6 +232,7 @@ export class Ship extends BaseEntity {
     this.y = y;
     this.vx = 0;
     this.vy = 0;
+    this.#thrustTimeout = 0;
     this.angle = angle;
     this.active = true;
     this.#explosionScale = 0;
@@ -265,13 +266,13 @@ export class Ship extends BaseEntity {
     this.vx += this.#horizontal * this.#acceleration;
     this.vx = Math.max(
       -this.#maxVelocity,
-      Math.min(this.#maxVelocity, this.vx)
+      Math.min(this.#maxVelocity, this.vx),
     );
 
     this.vy += this.#vertical * this.#acceleration;
     this.vy = Math.max(
       -this.#maxVelocity,
-      Math.min(this.#maxVelocity, this.vy)
+      Math.min(this.#maxVelocity, this.vy),
     );
   }
 
