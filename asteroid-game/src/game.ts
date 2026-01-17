@@ -210,7 +210,7 @@ export class AsteroidGame {
   #usePowerUpsPerPlayer(
     player: Ship,
     powerUp: PowerUp,
-    procetilesArr: Projectile[]
+    procetilesArr: Projectile[],
   ): void {
     if (!player.active) return;
     if (this.#checkCollision(player, powerUp)) {
@@ -282,7 +282,7 @@ export class AsteroidGame {
   #handlePlayerAsteroidCollision(
     asteroid: Asteroid,
     player: Ship,
-    currentTimeMs: number
+    currentTimeMs: number,
   ) {
     if (this.#checkCollision(asteroid, player)) {
       if (asteroid.shouldPlayCollision(currentTimeMs)) {
@@ -328,7 +328,7 @@ export class AsteroidGame {
 
   #drawAsteroids(): void {
     this.#asteroids.forEach((asteroid) =>
-      asteroid.update(this.#ctx, this.#width, this.#height)
+      asteroid.update(this.#ctx, this.#width, this.#height),
     );
   }
 
@@ -336,7 +336,7 @@ export class AsteroidGame {
     if (this.#bg) {
       const scale = Math.max(
         this.#width / this.#bg.width,
-        this.#height / this.#bg.height
+        this.#height / this.#bg.height,
       );
 
       const drawWidth = this.#bg.width * scale;
@@ -398,7 +398,7 @@ export class AsteroidGame {
   #destroyPlayer(
     player: Ship,
     enemyProjectiles: Projectile[],
-    playerName: PlayerNumber
+    playerName: PlayerNumber,
   ): void {
     if (!player.active) return;
 
@@ -420,6 +420,16 @@ export class AsteroidGame {
     }
   }
 
+  #resetPowerUpCooldowns(): void {
+    for (const powerUp in this.#powerUpCooldowns)
+      this.#powerUpCooldowns[powerUp as PowerUpType] = 0;
+  }
+  #resetPowerUpCounts(): void {
+    for (const type in this.#powerupsCount) {
+      this.#powerupsCount[type as PowerUpType] = 0;
+    }
+  }
+
   #resetGame(): void {
     clearTimeout(this.#resetTimeoutID);
 
@@ -431,11 +441,16 @@ export class AsteroidGame {
 
       this.#asteroids = [];
 
+      this.#powerups = [];
+
+      this.#resetPowerUpCooldowns();
+      this.#resetPowerUpCounts();
+
       this.#playerOne.reset(x1, y1, getRandomAngle());
       this.#playerTwo.reset(
         this.#width - x1,
         this.#height - y1,
-        getRandomAngle()
+        getRandomAngle(),
       );
 
       this.#populateAsteroidsArray();
@@ -462,7 +477,7 @@ export class AsteroidGame {
     if (this.#checkCollision(this.#playerOne, this.#playerTwo)) {
       const { nx, ny } = calculateCollisionNormal(
         this.#playerOne,
-        this.#playerTwo
+        this.#playerTwo,
       );
       this.#playerOne.bounce(nx, ny);
       this.#playerTwo.bounce(nx, ny);
@@ -476,12 +491,12 @@ export class AsteroidGame {
       this.#setLastPressedKeyByPlayer(
         key as KeyName,
         this.#playerOne,
-        PLAYER_ONE_CONTROLS
+        PLAYER_ONE_CONTROLS,
       );
       this.#setLastPressedKeyByPlayer(
         key as KeyName,
         this.#playerTwo,
-        PLAYER_TWO_CONTROLS
+        PLAYER_TWO_CONTROLS,
       );
 
       this.#keys[key as KeyName] = state;
@@ -491,7 +506,7 @@ export class AsteroidGame {
   #setLastPressedKeyByPlayer(
     key: KeyName,
     player: Ship,
-    playerControls: ControlsType
+    playerControls: ControlsType,
   ) {
     if (!Object.values(playerControls).includes(key)) return;
     if (key == playerControls.shoot) return;
@@ -514,7 +529,7 @@ export class AsteroidGame {
     player.lastKeyPressTimeMS[key] = now;
 
     const directionalKeys = Object.values(playerControls).filter(
-      (k) => k !== playerControls.shoot && k !== key
+      (k) => k !== playerControls.shoot && k !== key,
     );
     for (const k of directionalKeys) {
       player.lastKeyPressTimeMS[k] = 0;
@@ -527,11 +542,11 @@ export class AsteroidGame {
     const randomY = Math.floor(Math.random() * this.#height);
     const x = Math.min(
       this.#width - maxObstacleSize,
-      Math.max(randomX, maxObstacleSize)
+      Math.max(randomX, maxObstacleSize),
     );
     const y = Math.min(
       this.#height - maxObstacleSize,
-      Math.max(randomY, maxObstacleSize)
+      Math.max(randomY, maxObstacleSize),
     );
     return { x, y };
   }

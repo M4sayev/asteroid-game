@@ -233,6 +233,7 @@ export class Ship extends BaseEntity {
     this.vx = 0;
     this.vy = 0;
     this.#thrustTimeout = 0;
+    this.#resetShotGunPowerUp();
     this.angle = angle;
     this.active = true;
     this.#explosionScale = 0;
@@ -299,10 +300,14 @@ export class Ship extends BaseEntity {
     this.#handleShotGunTimeout();
   }
 
+  #resetShotGunPowerUp(): void {
+    this.#shotgunTimeout = Ship.shotgunTimeoutConst;
+    this.hasPowerupShotgun = false;
+  }
+
   #handleShotGunTimeout(): void {
     if (this.#shotgunTimeout < 0) {
-      this.#shotgunTimeout = Ship.shotgunTimeoutConst;
-      this.hasPowerupShotgun = false;
+      this.#resetShotGunPowerUp();
     }
     if (this.hasPowerupShotgun) {
       this.#shotgunTimeout--;
