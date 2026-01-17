@@ -1,7 +1,7 @@
 import { AsteroidGame, asteroidGameAnimation } from "./game.js";
 import { initMenu } from "./menu/menu.js";
 
-let asteroidGame: AsteroidGame;
+export let asteroidGame: AsteroidGame;
 
 export function initGame() {
   cancelAnimationFrame(asteroidGameAnimation);
